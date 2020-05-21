@@ -1,3 +1,3 @@
 # Chapter_occ
 
-A project for Sam Chang's thesis in Environmental Science.
+A project for Sam Chang's this year thesis in Environmental Science.
