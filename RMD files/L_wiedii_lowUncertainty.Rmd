@@ -1,0 +1,253 @@
+---
+title: "occUncertain-vigentte"
+author: "Samuel Chang"
+date: "3/5/2020"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{occUncertain-vigentte}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# 1. Introduction
+
+This vignette goes through the use of uncertainty meassures of species occurrence records in "occUncertainty: An R package for addressing uncertainty of species occurrence in species distribution models". Here we demostrate how *occUncertain* can be used to transform uncertainty meassures from meters to decimal degrees, how many repetitions of the repetitions of the mutating algorithm are necessary to accurately achieve occurrence records, and we examine whether there is a notable variability in the quantification of the extent area that encompass the inferred or projected sites of occurrence of a species, and the area within the extent polygon they occupy. 
+
+
+# 2. Load the occUncertain R package
+Here we load the R package from source code. This source code will soon be submitted to CRAN, so that this package can be loaded using standard package management methods.
+
+```{r}
+library(occUncertain)
+```
+
+
+# 3. Example dataset
+
+To demonstrate the use of the package occUncertain we used a set of 229 verified, georeferenced occurrence records for the margay (*Leopardus weidii*) a small wild cat native to Central and South America. These occurrences dataset are from the Global Biodiversity Information Facility  (GBIF) and are included as part of the occUncertain package.
+
+## 3.1 Load dataset 
+```{r dtaframes, eval=FALSE, include=FALSE}
+
+#for the data set that has low uncertainty under 3000 meters with NA uncertainty
+
+L_wiedii_lowUnc <- rbind(L_weidii_258occ_alluncertainty, L_weidii_9occ_under3000uncertainty) 
+
+save(L_wiedii_lowUnc, file = "C:/Users/Samuel/Documents/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_lowUnc.RData")
+```
+
+```{r loading data}
+load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_lowUnc.RData")
+
+```
+
+Lets take a look into the data set, it is required to have at least three columns: 
+1. Latitude in decimal degrees
+2. Longitude in decimal degrees
+3. Coordinate uncertainty in meters.
+
+```{r head}
+head(L_wiedii_lowUnc)
+```
+# 4. meters_to_decdeg function
+
+The function **meters_to_decdeg** transforms the units into radian degrees for each occurence point. Its impotant to consider the fact that as one moves away from the equator towards a pole, one degree of longitude is multiplied by the cosine of the latitude, decreasing the distance, approaching zero at the pole.  
+
+In case of having an NA values for the uncertaity, the function includes a parameter *na_action*; which enacts distance options for NA values. The options are "NA as zero" , "NA as mean", and "NA as NA".
+
+
+```{r uncertainty from meter to radian degrees NA as 0}
+L_wiedii_lowUnc_naZero <-
+  meters_to_decdeg(
+    L_wiedii_lowUnc,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as 0"
+  )
+head(L_wiedii_lowUnc_naZero)
+
+
+L_wiedii_lowUnc_naZero <-
+  cbind(L_wiedii_lowUnc, L_wiedii_lowUnc_naZero)
+head(L_wiedii_lowUnc_naZero)
+```
+
+```{r uncertainty from meter to radian degrees NA as mean}
+L_wiedii_lowUnc_naMean <-
+  meters_to_decdeg(
+    L_wiedii_lowUnc,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as mean"
+  )
+head(L_wiedii_lowUnc_naMean)
+
+
+L_wiedii_lowUnc_naMean <-
+  cbind(L_wiedii_lowUnc, L_wiedii_lowUnc_naMean)
+head(L_wiedii_lowUnc_naMean)
+
+```
+
+```{r uncertainty from meter to radian degrees NA as NA}
+L_wiedii_lowUnc_naNA <-
+  meters_to_decdeg(
+    L_wiedii_lowUnc,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as NA"
+  )
+head(L_wiedii_lowUnc_naNA)
+
+
+L_wiedii_lowUnc_naNA <-
+  cbind(L_wiedii_lowUnc, L_wiedii_lowUnc_naNA)
+head(L_wiedii_lowUnc_naNA)
+
+```
+
+# 5. generate_occ_uncertain function
+
+The function **generate_occ_uncertain** uses uncertain values to generate random occurrence latitude and longitude coordinates. The function requires to have a data.frame with at least four columns in decimal degrees:
+1. Latitude in decimal degrees.
+2. Longitude in decimal degrees.
+3. Latitude uncertainty in decimal degrees.
+4. Longitude uncertainty in decimal degrees.
+
+Lets generate random occurrence latitude and longitude coordinates with uncertain values. 
+```{r generate}
+
+df<-data.frame(words = unlist(words))  
+
+str(L_wiedii_lowUnc_naMean)
+Leopardus_wiedii_random_naMean <-
+  generate_occ_uncertain(
+    L_wiedii_lowUnc_naMean,
+    lat_col = "L_wiedii_lowUnc_naMean$decimalLatitude",
+    lon_col = "L_wiedii_lowUnc_naMean$decimalLongitude",
+    lat_uncertainty = "L_wiedii_lowUnc_naMean$lat_uncertainty",
+    lon_uncertainty = "L_wiedii_lowUnc_naMean$lon_uncertainty",
+    taxa_col = "species"
+  )
+
+
+head(Leopardus_wiedii_random)
+```
+
+
+## Lets visualize 
+```{r}
+plot(Leopardus_wiedii$longitude, Leopardus_wiedii$latitude)
+points(Leopardus_wiedii_random$lon_random, Leopardus_wiedii_random$lat_random, col = "red", pch = 21)
+```
+----
+
+# 6. Using the random occurences in land metrics with ConR
+
+## 6.1 Input file 
+
+Is is required a data frame with at least three different columns: 
+
+```{r file}
+head(Leopardus_wiedii_random)
+```
+1. lat_random: Latitude in decimal degrees
+2. lon_random: Longitude in decimal degrees
+3. Name of taxa
+
+
+# 6.2. Computing EOO 
+
+The Extent of Occurrence (EOO) is the area contained within the shortest continuous imaginary boundary which can be drawn to encompass all the known, inferred or projected sites of present occurrence of a taxon, excluding cases of vagrancy. (IUCN 2012)
+
+```{r EOO}
+L_weidii_EOO <- EOO.computing(Leopardus_wiedii_random)
+
+L_weidii_EOO <- EOO.computing(Leopardus_wiedii_random, export_shp = T)
+
+plot(L_weidii_EOO$spatial.polygon_1, col = "grey") #need finite 'xlim' values
+
+```
+
+### 6.2.1. Cropping spatial polygon for excluding unsuitable area
+
+You may want to exclude areas that are not suitable for your species when computing EOO. This is feasible using the logical argument exclude.area which will crop areas defined by the shapefile you provide with the argument country_map. Note that it is mandatory to provide a shapefile for country_map if exclude.area is TRUE. 
+```{r excluding unsuitable area}
+## Use this to exclude ocean area
+#ConR provides the land world cover. Ocean cover is therefore excluded when computing EOO.
+EOO.computing(Leopardus_wiedii_random, exclude.area = T, country_map = land)
+
+#Overlapping hull convex with the ocean cover:
+EOO.computing(Leopardus_wiedii_random, exclude.area = F, country_map = land)
+```
+
+
+## 6.3 Computing AOO 
+(AOO) is calculatlaed as the area of all known or predicted cells for the species. The resolution will be 2x2km as required by IUCN.
+
+Area of occupancy (AOO), is the area occupied by a taxon within its extent of occurrence. The measure reflects the fact that a taxon will not usually occur throughout the area of its extent of occurrence, which may contain unsuitable or unoccupied habitats.
+
+```{r AOO}
+
+L_weidii_AOO <- AOO.computing(Leopardus_wiedii_random)
+L_weidii_AOO
+```
+
+
+
+## 6.4 Runing IUCN.eval function 
+
+```{r IUCN}
+
+IUCN.eval(Leopardus_wiedii_random)
+```
+
+
+
+# 7 Next steps
+
+Use a for loop to repeat the randomizing points, then calc EOO and AOO, 10 times.
+Save each EOO and AOO result, so you should have 10 of each. 
+
+```{r}
+
+# Initiate vectors
+library(ConR)
+library(tictoc)
+tic("total")
+
+rand_EOOs <- c()
+rand_AOOs <- c()
+
+for(x in 1:10){
+  # Get random points
+  occ_random <- generate_occ_uncertain(Leopardus_wiedii, lat_col = "latitude", lon_col = "longitude", 
+                                       lat_uncertainty = "lat_uncertainty", 
+                                       lon_uncertainty = "lon_uncertainty",
+                                       taxa_col = "species")
+  # Calculate EOO
+  EOO_temp <- EOO.computing(occ_random)
+  # Add new EOO value to rand_EOOs
+  rand_EOOs <- c(rand_EOOs, EOO_temp)
+  
+  # Calcualte AOO
+  AOO_temp <- AOO.computing(occ_random)
+  # Add new AOO value to rand_AOOs
+  rand_AOOs <- c(rand_AOOs, AOO_temp) 
+
+  }
+
+toc()
+```
+

@@ -1,0 +1,133 @@
+---
+title: "occUncertain-vigentte"
+author: "Samuel Chang"
+date: "3/5/2020"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{occUncertain-vigentte}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# 1. Introduction
+
+This vignette goes through the use of uncertainty meassures of species occurrence records in "occUncertainty: An R package for addressing uncertainty of species occurrence in species distribution models". Here we demostrate how *occUncertain* can be used to transform uncertainty meassures from meters to decimal degrees, how many repetitions of the repetitions of the mutating algorithm are necessary to accurately achieve occurrence records, and we examine whether there is a notable variability in the quantification of the extent area that encompass the inferred or projected sites of occurrence of a species, and the area within the extent polygon they occupy. 
+
+
+# 2. Load the occUncertain R package
+Here we load the R package from source code. This source code will soon be submitted to CRAN, so that this package can be loaded using standard package management methods.
+
+```{r}
+library(occUncertain)
+```
+
+# 3. Dataset
+
+#To demonstrate the use of the package occUncertain we used a set of four different datasets. This dataset is for 65 georeferenced occurrence records in Ecuador northern Andes for the spectacled bear (*Tremarctos ornatus*). These occurrences dataset are from the Global Biodiversity Information Facility  (GBIF) and are included as part of the occUncertain package.
+
+## 3.1 Load dataset 
+```{r dataset, eval = FALSE}
+load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_EC.RData")
+
+head(T_ornatus_EC)
+```
+
+# 4. meters_to_decdeg function
+```{r uncertainty from meter to radian degrees NA as 0}
+T_ornatus_EC_uncertainty_naZero <-
+  meters_to_decdeg(T_ornatus_EC, 
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as 0")
+
+T_ornatus_EC_uncertainty_naZero <-
+  cbind(T_ornatus_EC, T_ornatus_EC_uncertainty_naZero)
+head(T_ornatus_EC_uncertainty_naZero)
+```
+
+```{r uncertainty from meter to radian degrees NA as mean}
+T_ornatus_EC_uncertainty_naMean <-
+  meters_to_decdeg(T_ornatus_EC, 
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as mean")
+
+T_ornatus_EC_uncertainty_naMean <-
+  cbind(T_ornatus_EC, T_ornatus_EC_uncertainty_naMean)
+head(T_ornatus_EC_uncertainty_naMean)
+```
+
+```{r uncertainty from meter to radian degrees NA as NA}
+T_ornatus_EC_uncertainty_naNA <-
+  meters_to_decdeg(T_ornatus_EC, 
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as NA")
+head(T_ornatus_EC_uncertainty_naNA)
+
+T_ornatus_EC_uncertainty_naNA <-
+  cbind(T_ornatus_EC, T_ornatus_EC_uncertainty_naNA)
+head(T_ornatus_EC_uncertainty_naNA)
+
+T_ornatus_EC_uncertainty_naNA <- dplyr::filter(T_ornatus_EC_uncertainty_naNA, !is.na(coordinateUncertaintyInMeters))
+```
+
+# 6. Using the random occurences in land metrics using function randon_geo_range
+
+The Extent of Occurrence (EOO) is the area contained within the shortest continuous imaginary boundary which can be drawn to encompass all the known, inferred or projected sites of present occurrence of a taxon, excluding cases of vagrancy. (IUCN 2012)
+
+#plot(T_ornatus_EOO$spatial.polygon_1, col = "grey") #need finite 'xlim' values
+
+You may want to exclude areas that are not suitable for your species when computing EOO. This is feasible using the logical argument exclude.area which will crop areas defined by the shapefile you provide with the argument country_map. Note that it is mandatory to provide a shapefile for country_map if exclude.area is TRUE. 
+
+```{r excluding unsuitable area}
+## Use this to exclude ocean area
+#ConR provides the land world cover. Ocean cover is therefore excluded when computing EOO.
+EOO.computing(T_ornatus_random, exclude.area = T, country_map = land)
+IUCN.eval(T_ornatus_random)
+
+```
+
+Area of occupancy (AOO), is the area occupied by a taxon within its extent of occurrence. The measure reflects the fact that a taxon will not usually occur throughout the area of its extent of occurrence, which may contain unsuitable or unoccupied habitats.
+AOO is calculatlaed as the area of all known or predicted cells for the species. The resolution will be 2x2km as required by IUCN.
+
+```{r land metrics}
+
+T_ornatus_EC_gen <-
+  generate_occ_uncertain(
+    T_ornatus_EC_uncertainty_naMean,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncetainty"
+  )
+
+T_ornatus_naMean_geo_range_10 <-
+  random_geo_range(10, T_ornatus_EC_uncertainty_naMean)
+
+T_ornatus_naZero_geo_range_10 <-
+  random_geo_range(10, T_ornatus_uncertainty_naZero)
+
+T_ornatus_EC_naNA_geo_range_10 <-
+  random_geo_range(10, T_ornatus_EC_uncertainty_naNA)
+
+T_ornatus_georanges_10 <-
+  cbind(
+    T_ornatus_naMean_geo_range_10,
+    T_ornatus_naZero_geo_range_10,
+    T_ornatus_naNA_geo_range_10
+  )
+
+```
+

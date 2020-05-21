@@ -1,0 +1,178 @@
+---
+title: "occUncertain-vigentte"
+author: "Samuel Chang"
+date: "3/5/2020"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{occUncertain-vigentte}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+# 1. Introduction
+
+This vignette goes through the use of uncertainty meassures of species occurrence records in "occUncertainty: An R package for addressing uncertainty of species occurrence in species distribution models". Here we demostrate how *occUncertain* can be used to transform uncertainty meassures from meters to decimal degrees, how many repetitions of the repetitions of the mutating algorithm are necessary to accurately achieve occurrence records, and we examine whether there is a notable variability in the quantification of the extent area that encompass the inferred or projected sites of occurrence of a species, and the area within the extent polygon they occupy. 
+
+
+# 2. Load the occUncertain R package
+Here we load the R package from source code. This source code will soon be submitted to CRAN, so that this package can be loaded using standard package management methods.
+
+```{r}
+library(occUncertain)
+```
+
+
+# 3. Example dataset
+
+To demonstrate the use of the package occUncertain we used a set of 229 verified, georeferenced occurrence records for the margay (*Leopardus weidii*) a small wild cat native to Central and South America. These occurrences dataset are from the Global Biodiversity Information Facility  (GBIF) and are included as part of the occUncertain package.
+
+## 3.1 Load dataset 
+```{r dataset, eval = FALSE}
+#for the data set that has high uncertainty above 3000 meters with NA uncertainty
+
+L_wiedii_highUnc <-
+  rbind(L_weidii_258occ_alluncertainty,
+    L_weidii_53occ_bet3to10uncertainty)
+
+save(L_wiedii_highUnc, file = "C:/Users/Samuel/Documents/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
+
+load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
+
+```
+
+Lets take a look into the data set, it is required to have at least three columns: 
+1. Latitude in decimal degrees
+2. Longitude in decimal degrees
+3. Coordinate uncertainty in meters.
+
+```{r head}
+head(L_wiedii_highUnc)
+```
+# 4. meters_to_decdeg function
+
+The function **meters_to_decdeg** transforms the units into radian degrees for each occurence point. Its impotant to consider the fact that as one moves away from the equator towards a pole, one degree of longitude is multiplied by the cosine of the latitude, decreasing the distance, approaching zero at the pole.  
+
+In case of having an NA values for the uncertaity, the function includes a parameter *na_action*; which enacts distance options for NA values. The options are "NA as zero" , "NA as mean", and "NA as NA".
+
+
+```{r uncertainty from meter to radian degrees NA as 0}
+L_wiedii_highUnc_naZero <-
+  meters_to_decdeg(
+    L_wiedii_highUnc,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as 0"
+  )
+head(L_wiedii_highUnc_naZero)
+
+
+L_wiedii_highUnc_naZero <-
+  cbind(L_wiedii_highUnc, L_wiedii_highUnc_naZero)
+head(L_wiedii_highUnc_naZero)
+
+```
+
+```{r uncertainty from meter to radian degrees NA as mean}
+L_wiedii_highUnc_naMean <-
+  meters_to_decdeg(
+    L_wiedii_highUnc,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as mean"
+  )
+head(L_wiedii_highUnc_naMean)
+
+L_wiedii_highUnc_naMean <-
+  cbind(L_wiedii_highUnc, L_wiedii_highUnc_naMean)
+
+head(L_wiedii_highUnc_naMean)
+
+```
+
+```{r uncertainty from meter to radian degrees NA as NA}
+L_wiedii_highUnc_naNA <-
+  meters_to_decdeg(
+    L_wiedii_highUnc,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as NA"
+  )
+
+head(L_wiedii_highUnc_naNA)
+
+L_wiedii_highUnc_naNA <-
+  cbind(L_wiedii_highUnc, L_wiedii_highUnc_naNA)
+
+head(L_wiedii_highUnc_naNA)
+
+L_wiedii_highUnc_naNA <- dplyr::filter(L_wiedii_highUnc_naNA, !is.na(coordinateUncertaintyInMeters))
+
+```
+
+# 5. generate_occ_uncertain function
+
+The function **generate_occ_uncertain** uses uncertain values to generate random occurrence latitude and longitude coordinates. The function requires to have a data.frame with at least four columns in decimal degrees:
+1. Latitude in decimal degrees.
+2. Longitude in decimal degrees.
+3. Latitude uncertainty in decimal degrees.
+4. Longitude uncertainty in decimal degrees.
+
+Lets generate random occurrence latitude and longitude coordinates with uncertain values. 
+```{r generate}
+
+Leopardus_wiedii_random <- generate_occ_uncertain(L_wiedii_Unc_naMean, lat_col = "decimalLatitude", lon_col = "decimalLongitude", lat_uncertainty = "lat_uncertainty", lon_uncertainty = "lon_uncertainty", taxa_col = "species")
+
+head(Leopardus_wiedii_random)
+```
+
+
+## Lets visualize 
+```{r}
+plot(L_wiedii_highUnc$decimalLongitude, L_wiedii_highUnc$decimalLatitude)
+points(Leopardus_wiedii_random$lon_random, Leopardus_wiedii_random$lat_random, col = "red", pch = 21)
+```
+
+# 7 Next steps
+
+Use a for loop to repeat the randomizing points, then calc EOO and AOO, 10 times.
+Save each EOO and AOO result, so you should have 10 of each. 
+
+```{r geographic metrics}
+
+L_wiedii_high_naMean_geo_range_10 <-
+  random_geo_range(
+    10,
+    L_wiedii_highUnc_naMean
+    lat
+  )
+
+nrow(L_wiedii_highUnc_naMean$lat_uncertainty)
+
+
+L_wiedii_high_naZero_geo_range_10 <-
+  random_geo_range(10, L_wiedii_highUnc_naZero)
+
+L_wiedii_high_naNA_geo_range_10 <-
+  random_geo_range(10, L_wiedii_highUnc_naNA)
+
+T_ornatus_georanges_10 <-
+  cbind(
+    T_ornatus_naMean_geo_range_10,
+    T_ornatus_naZero_geo_range_10,
+    T_ornatus_naNA_geo_range_10
+  )
+
+toc()
+```
+
