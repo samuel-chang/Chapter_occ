@@ -43,7 +43,9 @@ L_wiedii_highUnc <-
     L_weidii_53occ_bet3to10uncertainty)
 
 save(L_wiedii_highUnc, file = "C:/Users/Samuel/Documents/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
+```
 
+```{r load data}
 load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
 
 ```
@@ -131,7 +133,7 @@ The function **generate_occ_uncertain** uses uncertain values to generate random
 Lets generate random occurrence latitude and longitude coordinates with uncertain values. 
 ```{r generate}
 
-Leopardus_wiedii_random <- generate_occ_uncertain(L_wiedii_Unc_naMean, lat_col = "decimalLatitude", lon_col = "decimalLongitude", lat_uncertainty = "lat_uncertainty", lon_uncertainty = "lon_uncertainty", taxa_col = "species")
+Leopardus_wiedii_random <- generate_occ_uncertain(L_wiedii_highUnc_naMean, lat_col = "decimalLatitude", lon_col = "decimalLongitude", lat_uncertainty = "lat_uncertainty", lon_uncertainty = "lon_uncertainty", taxa_col = "species")
 
 head(Leopardus_wiedii_random)
 ```
@@ -149,16 +151,16 @@ Use a for loop to repeat the randomizing points, then calc EOO and AOO, 10 times
 Save each EOO and AOO result, so you should have 10 of each. 
 
 ```{r geographic metrics}
-
 L_wiedii_high_naMean_geo_range_10 <-
   random_geo_range(
     10,
-    L_wiedii_highUnc_naMean
-    lat
+    L_wiedii_highUnc_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
   )
-
-nrow(L_wiedii_highUnc_naMean$lat_uncertainty)
-
 
 L_wiedii_high_naZero_geo_range_10 <-
   random_geo_range(10, L_wiedii_highUnc_naZero)
