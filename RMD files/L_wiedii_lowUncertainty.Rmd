@@ -101,6 +101,7 @@ names(L_wiedii_low_naMean_geo_range_100)[1] <- "Mean_EOO"
 names(L_wiedii_low_naMean_geo_range_100)[2] <- "Mean_AOO"
 
 
+
 L_wiedii_low_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -138,3 +139,12 @@ write.csv2(L_wiedii_low_georanges_100, "~/GitHub/ENS Master/Chapter1/Chapter_uno
 
 ```
 
+```{r mean original data}
+observed <- dplyr::select(L_wiedii_lowUnc, decimalLatitude, decimalLongitude, species)
+(EOO.computing(observed)$EOO - mean(L_wiedii_low_naMean_geo_range_100$Mean_EOO))/sd(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
+```
+
+```{r }
+hist(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
+
+```
