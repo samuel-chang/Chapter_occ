@@ -17,55 +17,23 @@ knitr::opts_chunk$set(
 ```
 
 
-# 1. Introduction
-
-This vignette goes through the use of uncertainty meassures of species occurrence records in "occUncertainty: An R package for addressing uncertainty of species occurrence in species distribution models". Here we demostrate how *occUncertain* can be used to transform uncertainty meassures from meters to decimal degrees, how many repetitions of the repetitions of the mutating algorithm are necessary to accurately achieve occurrence records, and we examine whether there is a notable variability in the quantification of the extent area that encompass the inferred or projected sites of occurrence of a species, and the area within the extent polygon they occupy. 
-
-
-# 2. Load the occUncertain R package
-Here we load the R package from source code. This source code will soon be submitted to CRAN, so that this package can be loaded using standard package management methods.
-
+# 1. Load the occUncertain R package and dataset
 ```{r}
 library(occUncertain)
-```
 
+#To demonstrate the use of the package occUncertain we used a a small wild cat in Ecuador and Colombia, the margay (*Leopardus weidii*). The data set of 126 verified georeferenced occurrence records, includes high uncertainty above 3000 meters and NA uncertainty records. The occurrences dataset are from the Global Biodiversity Information Facility (19 May 2020) GBIF Occurrence Download https://doi.org/10.15468/dl.vk997h
 
-# 3. Example dataset
-
-To demonstrate the use of the package occUncertain we used a set of 229 verified, georeferenced occurrence records for the margay (*Leopardus weidii*) a small wild cat native to Central and South America. These occurrences dataset are from the Global Biodiversity Information Facility  (GBIF) and are included as part of the occUncertain package.
-
-## 3.1 Load dataset 
-```{r dataset, eval = FALSE}
-#for the data set that has high uncertainty above 3000 meters with NA uncertainty
-
-L_wiedii_highUnc <-
-  rbind(L_weidii_258occ_alluncertainty,
-    L_weidii_53occ_bet3to10uncertainty)
-
-save(L_wiedii_highUnc, file = "C:/Users/Samuel/Documents/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
-```
-
-```{r load data}
 load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
 
 ```
 
-Lets take a look into the data set, it is required to have at least three columns: 
-1. Latitude in decimal degrees
-2. Longitude in decimal degrees
-3. Coordinate uncertainty in meters.
-
-```{r head}
-head(L_wiedii_highUnc)
-```
-# 4. meters_to_decdeg function
+# 2. meters_to_decdeg function
 
 The function **meters_to_decdeg** transforms the units into radian degrees for each occurence point. Its impotant to consider the fact that as one moves away from the equator towards a pole, one degree of longitude is multiplied by the cosine of the latitude, decreasing the distance, approaching zero at the pole.  
 
 In case of having an NA values for the uncertaity, the function includes a parameter *na_action*; which enacts distance options for NA values. The options are "NA as zero" , "NA as mean", and "NA as NA".
-
-
-```{r uncertainty from meter to radian degrees NA as 0}
+```{r uncertainty from meter to radian degrees} 
+#NA as 0
 L_wiedii_highUnc_naZero <-
   meters_to_decdeg(
     L_wiedii_highUnc,
@@ -74,16 +42,12 @@ L_wiedii_highUnc_naZero <-
     distance = "coordinateUncertaintyInMeters",
     na_action = "NA as 0"
   )
-head(L_wiedii_highUnc_naZero)
-
 
 L_wiedii_highUnc_naZero <-
   cbind(L_wiedii_highUnc, L_wiedii_highUnc_naZero)
 head(L_wiedii_highUnc_naZero)
 
-```
-
-```{r uncertainty from meter to radian degrees NA as mean}
+#NA as mean
 L_wiedii_highUnc_naMean <-
   meters_to_decdeg(
     L_wiedii_highUnc,
@@ -92,16 +56,12 @@ L_wiedii_highUnc_naMean <-
     distance = "coordinateUncertaintyInMeters",
     na_action = "NA as mean"
   )
-head(L_wiedii_highUnc_naMean)
 
 L_wiedii_highUnc_naMean <-
   cbind(L_wiedii_highUnc, L_wiedii_highUnc_naMean)
-
 head(L_wiedii_highUnc_naMean)
 
-```
-
-```{r uncertainty from meter to radian degrees NA as NA}
+#NA as NA
 L_wiedii_highUnc_naNA <-
   meters_to_decdeg(
     L_wiedii_highUnc,
@@ -111,31 +71,15 @@ L_wiedii_highUnc_naNA <-
     na_action = "NA as NA"
   )
 
-head(L_wiedii_highUnc_naNA)
-
 L_wiedii_highUnc_naNA <-
   cbind(L_wiedii_highUnc, L_wiedii_highUnc_naNA)
-
 head(L_wiedii_highUnc_naNA)
 
-L_wiedii_highUnc_naNA <- dplyr::filter(L_wiedii_highUnc_naNA, !is.na(coordinateUncertaintyInMeters))
+#filter occ that have NA uncertainty 
+L_wiedii_highUnc_naNA <-
+  dplyr::filter(L_wiedii_highUnc_naNA,
+    !is.na(coordinateUncertaintyInMeters))
 
-```
-
-# 5. generate_occ_uncertain function
-
-The function **generate_occ_uncertain** uses uncertain values to generate random occurrence latitude and longitude coordinates. The function requires to have a data.frame with at least four columns in decimal degrees:
-1. Latitude in decimal degrees.
-2. Longitude in decimal degrees.
-3. Latitude uncertainty in decimal degrees.
-4. Longitude uncertainty in decimal degrees.
-
-Lets generate random occurrence latitude and longitude coordinates with uncertain values. 
-```{r generate}
-
-Leopardus_wiedii_random <- generate_occ_uncertain(L_wiedii_highUnc_naMean, lat_col = "decimalLatitude", lon_col = "decimalLongitude", lat_uncertainty = "lat_uncertainty", lon_uncertainty = "lon_uncertainty", taxa_col = "species")
-
-head(Leopardus_wiedii_random)
 ```
 
 
@@ -145,10 +89,14 @@ plot(L_wiedii_highUnc$decimalLongitude, L_wiedii_highUnc$decimalLatitude)
 points(Leopardus_wiedii_random$lon_random, Leopardus_wiedii_random$lat_random, col = "red", pch = 21)
 ```
 
-# 7 Next steps
+# 3 Using the random occurences in land metrics using function randon_geo_range
 
-Use a for loop to repeat the randomizing points, then calc EOO and AOO, 10 times.
-Save each EOO and AOO result, so you should have 10 of each. 
+The Extent of Occurrence (EOO) is the area contained within the shortest continuous imaginary boundary which can be drawn to encompass all the known, inferred or projected sites of present occurrence of a taxon, excluding cases of vagrancy. (IUCN 2012)
+
+You may want to exclude areas that are not suitable for your species when computing EOO. This is feasible using the logical argument exclude.area which will crop areas defined by the shapefile you provide with the argument country_map. Note that it is mandatory to provide a shapefile for country_map if exclude.area is TRUE. 
+
+Area of occupancy (AOO), is the area occupied by a taxon within its extent of occurrence. The measure reflects the fact that a taxon will not usually occur throughout the area of its extent of occurrence, which may contain unsuitable or unoccupied habitats.
+AOO is calculatlaed as the area of all known or predicted cells for the species. The resolution will be 2x2km as required by IUCN.
 
 ```{r geographic metrics}
 L_wiedii_high_naMean_geo_range_10 <-
@@ -162,19 +110,38 @@ L_wiedii_high_naMean_geo_range_10 <-
     lat_uncertainty = "lat_uncertainty"
   )
 
-L_wiedii_high_naZero_geo_range_10 <-
-  random_geo_range(10, L_wiedii_highUnc_naZero)
 
-L_wiedii_high_naNA_geo_range_10 <-
-  random_geo_range(10, L_wiedii_highUnc_naNA)
-
-T_ornatus_georanges_10 <-
-  cbind(
-    T_ornatus_naMean_geo_range_10,
-    T_ornatus_naZero_geo_range_10,
-    T_ornatus_naNA_geo_range_10
+L_wiedii_high_naZero_geo_range_100 <-
+  random_geo_range(
+    100,
+    L_wiedii_highUnc_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
   )
 
-toc()
+L_wiedii_high_naNA_geo_range_100 <-
+  random_geo_range(
+    100,
+    L_wiedii_highUnc_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+
+write.csv2(L_wiedii_high_CO_georanges_100, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_CO_georanges_100.csv" )
+
+L_wiedii_high_georanges_10 <-
+  cbind(
+    L_wiedii_high_naMean_geo_range_10,
+    L_wiedii_high_naZero_geo_range_10,
+    L_wiedii_high_naNA_geo_range_10
+  )
+
+write.csv2(L_wiedii_high_georanges_10, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_high_georanges_10.csv" )
 ```
 
