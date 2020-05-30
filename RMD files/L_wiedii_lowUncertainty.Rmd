@@ -23,7 +23,7 @@ library(occUncertain)
 
 #To demonstrate the use of the package occUncertain we used a a small wild cat in Ecuador and Colombia, the margay (*Leopardus weidii*). The data set of 126 verified georeferenced occurrence records, includes low uncertainty below 3000 meters and NA uncertainty records. The occurrences dataset are from the Global Biodiversity Information Facility (19 May 2020) GBIF Occurrence Download https://doi.org/10.15468/dl.s7tq24
 
-load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_lowUnc.RData")
+load("../data/L_wiedii_lowUnc.RData")
 
 ```
 
@@ -87,6 +87,8 @@ L_wiedii_lowUnc_naNA <- dplyr::filter(L_wiedii_lowUnc_naNA, !is.na(coordinateUnc
 
 # 3. Using the random occurences in land metrics with random_geo_range
 ```{r geographic metrics}
+library(ConR)
+
 L_wiedii_low_naMean_geo_range_100 <-
   random_geo_range(
     100,
@@ -135,16 +137,20 @@ L_wiedii_low_georanges_100 <-
     L_wiedii_low_naNA_geo_range_100
   )
 
-write.csv2(L_wiedii_low_georanges_100, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_low_georanges_100.csv" )
+write.csv(L_wiedii_low_georanges_100, "../data/L_wiedii_low_georanges_100.csv" )
 
 ```
 
+
+Calculate a z-statistic for the EOO of the original data set compared to the EOO values of the 100 random iterations
+
 ```{r mean original data}
-observed <- dplyr::select(L_wiedii_lowUnc, decimalLatitude, decimalLongitude, species)
-(EOO.computing(observed)$EOO - mean(L_wiedii_low_naMean_geo_range_100$Mean_EOO))/sd(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
+observed <- dplyr::select(L_wiedii_lowUnc_naMean, decimalLatitude, decimalLongitude, species)
+(EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_naMean_geo_range_100$Mean_EOO))/sd(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
 ```
 
 ```{r }
 hist(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
+abline(v = EOO.computing(observed, exclude.area = T, country_map = land)$EOO, col = "red")
 
 ```
