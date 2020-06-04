@@ -88,7 +88,23 @@ L_wiedii_lowUnc_naNA <- dplyr::filter(L_wiedii_lowUnc_naNA, !is.na(coordinateUnc
 # 3. Using the random occurences in land metrics with random_geo_range
 ```{r geographic metrics}
 library(ConR)
+tictoc::tic(msg = "1000.naMean" , quiet = FALSE) #1000.naMean: 4568.72 sec elapsed
+L_wiedii_low_naMean_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    L_wiedii_lowUnc_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+tictoc::toc()
 
+names(L_wiedii_low_naMean_geo_range_1000)[1] <- "naMean_EOO"
+names(L_wiedii_low_naMean_geo_range_1000)[2] <- "naMean_AOO"
+
+tictoc::tic(msg = "100.naMean" , quiet = FALSE) #100.naMean: 418.96 sec elapsed
 L_wiedii_low_naMean_geo_range_100 <-
   random_geo_range(
     100,
@@ -99,11 +115,30 @@ L_wiedii_low_naMean_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-names(L_wiedii_low_naMean_geo_range_100)[1] <- "Mean_EOO"
-names(L_wiedii_low_naMean_geo_range_100)[2] <- "Mean_AOO"
+tictoc::toc()
 
+names(L_wiedii_low_naMean_geo_range_100)[1] <- "naMean_EOO"
+names(L_wiedii_low_naMean_geo_range_100)[2] <- "naMean_AOO"
+```
 
+```{r L_wiedii_low_naZero_geo_range}
+tictoc::tic(msg = "1000.naZero" , quiet = FALSE) #1000.naZero: 4497.16 sec elapsed
 
+L_wiedii_low_naZero_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    L_wiedii_lowUnc_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+tictoc::toc()
+names(L_wiedii_low_naZero_geo_range_1000)[1] <- "naZero_EOO"
+names(L_wiedii_low_naZero_geo_range_1000)[2] <- "naZero_AOO"
+
+tictoc::tic(msg = "100.naZero" , quiet = FALSE) #100.naZero: 444.04 sec elapsedy
 L_wiedii_low_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -114,10 +149,32 @@ L_wiedii_low_naZero_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-names(L_wiedii_low_naZero_geo_range_100)[1] <- "Zero_EOO"
-names(L_wiedii_low_naZero_geo_range_100)[2] <- "Zero_AOO"
+tictoc::toc()
+names(L_wiedii_low_naZero_geo_range_100)[1] <- "naZero_EOO"
+names(L_wiedii_low_naZero_geo_range_100)[2] <- "naZero_AOO"
+```
 
-L_wiedii_low_naNA_geo_range_100 <-
+```{r L_wiedii_low_naNA_geo_range}
+library(tictoc)
+tictoc::tic(msg = "1000.naNA", quiet = FALSE)
+L_wiedii_low_naNA_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    L_wiedii_lowUnc_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+tictoc::toc()
+
+names(L_wiedii_low_naNA_geo_range_1000)[1] <- "naNA_EOO"
+names(L_wiedii_low_naNA_geo_range_1000)[2] <- "naNA_AOO"
+
+library(tictoc)
+tictoc::tic(msg = "100.naNA", quiet = FALSE)   #443.32 sec elapsed
+L_wiedii_low_naNA_geo_range_100 <- L_wiedii_low_naNA_geo_range_1000 <-
   random_geo_range(
     100,
     L_wiedii_lowUnc_naNA,
@@ -127,18 +184,30 @@ L_wiedii_low_naNA_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-names(L_wiedii_low_naNA_geo_range_100)[1] <- "NA_EOO"
-names(L_wiedii_low_naNA_geo_range_100)[2] <- "NA_AOO"
+tictoc::toc()
 
-L_wiedii_low_georanges_100 <-
+names(L_wiedii_low_naNA_geo_range_100)[1] <- "naNA_EOO"
+names(L_wiedii_low_naNA_geo_range_100)[2] <- "naNA_AOO"
+```
+
+```{r csv iterations}
+
+L_wiedii_low_100georanges <-
   cbind(
     L_wiedii_low_naMean_geo_range_100,
     L_wiedii_low_naZero_geo_range_100,
     L_wiedii_low_naNA_geo_range_100
   )
+write.csv(L_wiedii_low_100georanges, "~/GitHub/ENS Master/Chapter1/Chapter_uno/Results/L_wiedii_low_georanges_100.csv")
 
-write.csv(L_wiedii_low_georanges_100, "../data/L_wiedii_low_georanges_100.csv" )
-
+L_wiedii_low_1000georanges <-
+  cbind(
+    L_wiedii_low_naMean_geo_range_1000,
+    L_wiedii_low_naZero_geo_range_1000,
+    L_wiedii_low_naNA_geo_range_1000
+  )
+write.csv(L_wiedii_low_1000georanges, "../Results/L_wiedii_low_georanges_100.csv" )
+load()
 ```
 
 
@@ -153,4 +222,6 @@ observed <- dplyr::select(L_wiedii_lowUnc_naMean, decimalLatitude, decimalLongit
 hist(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
 abline(v = EOO.computing(observed, exclude.area = T, country_map = land)$EOO, col = "red")
 
+
 ```
+

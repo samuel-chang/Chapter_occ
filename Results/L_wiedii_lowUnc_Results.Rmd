@@ -1,0 +1,94 @@
+---
+title: "Results"
+author: "Samuel Chang"
+date: "6/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r datasets with low uncertainty }
+#observed data set
+load("../data/L_wiedii_lowUnc.RData")
+observed <-
+  dplyr::select(L_wiedii_lowUnc_naMean,
+    decimalLatitude,
+    decimalLongitude,
+    species)
+EOO.computing(observed, exclude.area = T, country_map = land)
+
+#Calculate a z-statistic for the EOO of the original data set compared to the EOO values of the 100 random iterations
+
+(
+  EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_1000georanges$naMean_EOO)
+) / sd(L_wiedii_low_1000georanges$naMean_EOO)
+
+#100 itertion is -0.5995791 (493.31 sec elapsed)
+#1000 iteration is -0.4048546
+
+hist(L_wiedii_low_naMean_geo_range_1000$Mean_EOO,
+  main = "L. wiediee extent of occurrence, with mean ucertainty values for NA values")
+abline(v = EOO.computing(observed, exclude.area = T, country_map = land)$EOO,
+  col = "red")
+
+(
+  EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_100georanges$naMean_EOO)
+) / sd(L_wiedii_low_100georanges$naMean_EOO)
+
+
+
+----
+  
+  (
+  EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_1000georanges$naZero_EOO)
+) / sd(L_wiedii_low_1000georanges$naZero_EOO)
+
+  (
+  EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_100georanges$naZero_EOO)
+) / sd(L_wiedii_low_100georanges$naZero_EOO)
+
+
+---
+(
+  EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_naZero_geo_range_100$Zero_EOO)
+) / sd(L_wiedii_low_naZero_geo_range_100$Zero_EOO)
+
+#Results:
+#100 itertion is -0.9961994
+#1000 iteration is -0.8835011 --- 4551.01 sec elapsed
+
+hist(L_wiedii_low_naZero_geo_range_1000$Mean_EOO)
+abline(v = EOO.computing(observed, exclude.area = T, country_map = land)$EOO,
+  col = "red")
+
+----(
+  EOO.computing(observed, exclude.area = T, country_map = land)$EOO - mean(L_wiedii_low_naNA_geo_range_1000$NA_EOO)
+) / sd(L_wiedii_low_naNA_geo_range_1000$NA_EOO)
+
+#100 itertion <- 2161.807
+hist(L_wiedii_low_naMean_geo_range_100$Mean_EOO)
+abline(v = EOO.computing(observed, exclude.area = T, country_map = land)$EOO,
+  col = "red")
+
+#1000 itertion <- 1963.668
+hist(L_wiedii_low_naMean_geo_range_1000$Mean_EOO)
+abline(v = EOO.computing(observed, exclude.area = T, country_map = land)$EOO, col = "red")
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
