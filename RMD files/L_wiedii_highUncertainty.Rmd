@@ -32,7 +32,7 @@ load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_highUnc.RData")
 The function **meters_to_decdeg** transforms the units into radian degrees for each occurence point. Its impotant to consider the fact that as one moves away from the equator towards a pole, one degree of longitude is multiplied by the cosine of the latitude, decreasing the distance, approaching zero at the pole.  
 
 In case of having an NA values for the uncertaity, the function includes a parameter *na_action*; which enacts distance options for NA values. The options are "NA as zero" , "NA as mean", and "NA as NA".
-```{r uncertainty from meter to radian degrees} 
+```{r uncertainty from meter to radian degrees}
 #NA as 0
 L_wiedii_highUnc_naZero <-
   meters_to_decdeg(
@@ -45,7 +45,6 @@ L_wiedii_highUnc_naZero <-
 
 L_wiedii_highUnc_naZero <-
   cbind(L_wiedii_highUnc, L_wiedii_highUnc_naZero)
-head(L_wiedii_highUnc_naZero)
 
 #NA as mean
 L_wiedii_highUnc_naMean <-
@@ -59,7 +58,6 @@ L_wiedii_highUnc_naMean <-
 
 L_wiedii_highUnc_naMean <-
   cbind(L_wiedii_highUnc, L_wiedii_highUnc_naMean)
-head(L_wiedii_highUnc_naMean)
 
 #NA as NA
 L_wiedii_highUnc_naNA <-
@@ -70,16 +68,13 @@ L_wiedii_highUnc_naNA <-
     distance = "coordinateUncertaintyInMeters",
     na_action = "NA as NA"
   )
+head(L_wiedii_highUnc_naNA)
 
 L_wiedii_highUnc_naNA <-
   cbind(L_wiedii_highUnc, L_wiedii_highUnc_naNA)
 head(L_wiedii_highUnc_naNA)
 
-#filter occ that have NA uncertainty 
-L_wiedii_highUnc_naNA <-
-  dplyr::filter(L_wiedii_highUnc_naNA,
-    !is.na(coordinateUncertaintyInMeters))
-
+L_wiedii_highUnc_naNA <- dplyr::filter(L_wiedii_highUnc_naNA, !is.na(coordinateUncertaintyInMeters))
 ```
 
 
@@ -98,10 +93,13 @@ You may want to exclude areas that are not suitable for your species when comput
 Area of occupancy (AOO), is the area occupied by a taxon within its extent of occurrence. The measure reflects the fact that a taxon will not usually occur throughout the area of its extent of occurrence, which may contain unsuitable or unoccupied habitats.
 AOO is calculatlaed as the area of all known or predicted cells for the species. The resolution will be 2x2km as required by IUCN.
 
+# 3. Using the random occurences in land metrics with random_geo_range
 ```{r geographic metrics}
-L_wiedii_high_naMean_geo_range_10 <-
+library(ConR)
+tictoc::tic(msg = "1000.naMean" , quiet = FALSE) #1000.naMean: 4568.72 sec elapsed
+L_wiedii_high_naMean_geo_range_1000 <-
   random_geo_range(
-    10,
+    1000,
     L_wiedii_highUnc_naMean,
     taxa_col = "species",
     lat_col = "decimalLatitude",
@@ -109,8 +107,46 @@ L_wiedii_high_naMean_geo_range_10 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
+tictoc::toc()
 
+names(L_wiedii_high_naMean_geo_range_1000)[1] <- "naMean_EOO"
+names(L_wiedii_high_naMean_geo_range_1000)[2] <- "naMean_AOO"
 
+tictoc::tic(msg = "100.naMean" , quiet = FALSE) #100.naMean: 418.96 sec elapsed
+L_wiedii_high_naMean_geo_range_100 <-
+  random_geo_range(
+    100,
+    L_wiedii_highUnc_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+tictoc::toc()
+
+names(L_wiedii_high_naMean_geo_range_100)[1] <- "naMean_EOO"
+names(L_wiedii_high_naMean_geo_range_100)[2] <- "naMean_AOO"
+```
+
+```{r L_wiedii_low_naZero_geo_range}
+tictoc::tic(msg = "1000.naZero" , quiet = FALSE) #1000.naZero: 4497.16 sec elapsed
+
+L_wiedii_high_naZero_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    L_wiedii_highUnc_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+tictoc::toc()
+names(L_wiedii_high_naZero_geo_range_1000)[1] <- "naZero_EOO"
+names(L_wiedii_high_naZero_geo_range_1000)[2] <- "naZero_AOO"
+
+tictoc::tic(msg = "100.naZero" , quiet = FALSE) #100.naZero: 444.04 sec elapsedy
 L_wiedii_high_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -121,8 +157,32 @@ L_wiedii_high_naZero_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
+tictoc::toc()
+names(L_wiedii_low_naZero_geo_range_100)[1] <- "naZero_EOO"
+names(L_wiedii_low_naZero_geo_range_100)[2] <- "naZero_AOO"
+```
 
-L_wiedii_high_naNA_geo_range_100 <-
+```{r L_wiedii_low_naNA_geo_range}
+library(tictoc)
+tictoc::tic(msg = "1000.naNA", quiet = FALSE)
+L_wiedii_high_naNA_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    L_wiedii_highUnc_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+tictoc::toc()
+
+names(L_wiedii_high_naNA_geo_range_1000)[1] <- "naNA_EOO"
+names(L_wiedii_high_naNA_geo_range_1000)[2] <- "naNA_AOO"
+
+library(tictoc)
+tictoc::tic(msg = "100.naNA", quiet = FALSE)   #443.32 sec elapsed
+L_wiedii_high_naNA_geo_range_100 <- L_wiedii_low_naNA_geo_range_1000 <-
   random_geo_range(
     100,
     L_wiedii_highUnc_naNA,
@@ -132,16 +192,27 @@ L_wiedii_high_naNA_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
+tictoc::toc()
 
-write.csv2(L_wiedii_high_CO_georanges_100, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_CO_georanges_100.csv" )
-
-L_wiedii_high_georanges_10 <-
-  cbind(
-    L_wiedii_high_naMean_geo_range_10,
-    L_wiedii_high_naZero_geo_range_10,
-    L_wiedii_high_naNA_geo_range_10
-  )
-
-write.csv2(L_wiedii_high_georanges_10, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/L_wiedii_high_georanges_10.csv" )
+names(L_wiedii_high_naNA_geo_range_100)[1] <- "naNA_EOO"
+names(L_wiedii_high_naNA_geo_range_100)[2] <- "naNA_AOO"
 ```
 
+```{r csv iterations}
+
+L_wiedii_high_100georanges <-
+  cbind(
+    L_wiedii_high_naMean_geo_range_100,
+    L_wiedii_high_naZero_geo_range_100,
+    L_wiedii_high_naNA_geo_range_100
+  )
+write.csv(L_wiedii_high_100georanges, "../Results/L_wiedii_high_100georanges.csv")
+
+L_wiedii_high_1000georanges <-
+  cbind(
+    L_wiedii_high_naMean_geo_range_1000,
+    L_wiedii_high_naZero_geo_range_1000,
+    L_wiedii_high_naNA_geo_range_1000
+  )
+write.csv(L_wiedii_high_1000georanges, "../Results/L_wiedii_high_1000georanges.csv" )
+```

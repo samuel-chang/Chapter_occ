@@ -89,8 +89,22 @@ T_ornatus_EC_naMean_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
   )
 names(T_ornatus_EC_naMean_geo_range_100)[1] <- "naMean_EOO"
-names(T_ornatus_EC_naMean_geo_range_10)[2] <- "naMean_AOO"
+names(T_ornatus_EC_naMean_geo_range_100)[2] <- "naMean_AOO"
 
+T_ornatus_EC_naMean_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    T_ornatus_EC_uncertainty_naMean,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lat_uncertainty = "lat_uncertainty",
+    lon_uncertainty = "lon_uncertainty",
+  )
+names(T_ornatus_EC_naMean_geo_range_1000)[1] <- "naMean_EOO"
+names(T_ornatus_EC_naMean_geo_range_1000)[2] <- "naMean_AOO"
+```
+
+```{r }
 T_ornatus_EC_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -103,7 +117,20 @@ T_ornatus_EC_naZero_geo_range_100 <-
 names(T_ornatus_EC_naZero_geo_range_100)[1] <- "naZero_EOO"
 names(T_ornatus_EC_naZero_geo_range_100)[2] <- "naZero_AOO"
 
+T_ornatus_EC_naZero_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    T_ornatus_EC_uncertainty_naZero,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lat_uncertainty = "lat_uncertainty",
+    lon_uncertainty = "lon_uncertainty",
+  )
+names(T_ornatus_EC_naZero_geo_range_1000)[1] <- "naZero_EOO"
+names(T_ornatus_EC_naZero_geo_range_1000)[2] <- "naZero_AOO"
+```
 
+```{r naNA_geo_range}
 T_ornatus_EC_naNA_geo_range_100 <-
   random_geo_range(
     100,
@@ -116,48 +143,6 @@ T_ornatus_EC_naNA_geo_range_100 <-
 names(T_ornatus_EC_naNA_geo_range_100)[1] <- "naNA_EOO"
 names(T_ornatus_EC_naNA_geo_range_100)[2] <- "naNA_AOO"
 
-T_ornatus_EC_100georanges <-
-  cbind(
-    T_ornatus_EC_naMean_geo_range_10,
-    T_ornatus_EC_naZero_geo_range_10,
-    T_ornatus_EC_naNA_geo_range_10
-  )
-
-write.csv(T_ornatus_EC_100georanges, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_EC_georanges_100.csv" )
-```
-
-```{r land metrics}
-tictoc::tic(msg = "naMean" )
-T_ornatus_EC_naMean_geo_range_1000 <-
-  random_geo_range(
-    1000,
-    T_ornatus_EC_uncertainty_naMean,
-    lat_col = "decimalLatitude",
-    lon_col = "decimalLongitude",
-    lat_uncertainty = "lat_uncertainty",
-    lon_uncertainty = "lon_uncertainty",
-  )
-tictoc::toc()
-names(T_ornatus_EC_naMean_geo_range_1000)[1] <- "Mean_EOO"
-names(T_ornatus_EC_naMean_geo_range_1000)[2] <- "Mean_AOO"
-
-
-tictoc::tic(msg = "naZero")
-T_ornatus_EC_naZero_geo_range_1000 <-
-  random_geo_range(
-    1000,
-    T_ornatus_EC_uncertainty_naZero,
-    lat_col = "decimalLatitude",
-    lon_col = "decimalLongitude",
-    lat_uncertainty = "lat_uncertainty",
-    lon_uncertainty = "lon_uncertainty",
-  )
-tictoc::toc()
-names(T_ornatus_EC_naZero_geo_range_1000)[1] <- "Zero_EOO"
-names(T_ornatus_EC_naZero_geo_range_1000)[2] <- "Zero_AOO"
-
-
-tictoc::tic(msg = "naNA")
 T_ornatus_EC_naNA_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -167,10 +152,19 @@ T_ornatus_EC_naNA_geo_range_1000 <-
     lat_uncertainty = "lat_uncertainty",
     lon_uncertainty = "lon_uncertainty",
   )
-tictoc::toc()
+names(T_ornatus_EC_naNA_geo_range_1000)[1] <- "naNA_EOO"
+names(T_ornatus_EC_naNA_geo_range_1000)[2] <- "naNA_AOO"
+```
 
-names(T_ornatus_EC_naNA_geo_range_1000)[1] <- "NA_EOO"
-names(T_ornatus_EC_naNA_geo_range_1000)[2] <- "NA_AOO"
+```{r save csv}
+T_ornatus_EC_100georanges <-
+  cbind(
+    T_ornatus_EC_naMean_geo_range_100,
+    T_ornatus_EC_naZero_geo_range_100,
+    T_ornatus_EC_naNA_geo_range_100
+  )
+
+write.csv(T_ornatus_EC_100georanges, "../Results/T_ornatus_EC_100georanges.csv" )
 
 T_ornatus_EC_1000georanges <-
   cbind(
@@ -179,6 +173,4 @@ T_ornatus_EC_1000georanges <-
     T_ornatus_EC_naNA_geo_range_1000
   )
 
-write.csv(T_ornatus_EC_1000georanges, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_EC_georanges_1000.csv" )
-```
-
+write.csv(T_ornatus_EC_1000georanges, "../Results/T_ornatus_EC_1000georanges.csv")
