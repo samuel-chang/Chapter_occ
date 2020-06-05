@@ -15,7 +15,7 @@ library(occUncertain)
 
 #To demonstrate the use of the package occUncertain we used a set of four different datasets. This dataset is for 1480 georeferenced occurrence records in Colombiafor the spectacled bear (*Tremarctos ornatus*). These occurrences dataset are from the Global Biodiversity Information Facility (19 May 2020) GBIF Occurrence Download https://doi.org/10.15468/dl.6ykjg7
 
-load("~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_CO.RData")
+load("../data/T_ornatus_CO.RData")
 ```
 
 # 2. meters_to_decdeg function
@@ -69,10 +69,14 @@ T_ornatus_CO_uncertainty_naNA <-
     !is.na(coordinateUncertaintyInMeters))
 ```
 
-# 3. Using the random occurences in land metrics using function randon_geo_range
+# 3 Using the random occurences in land metrics using function randon_geo_range
 
-# The Extent of Occurrence (EOO) is the area contained within the shortest continuous imaginary boundary which can be drawn to encompass all the known, inferred or projected sites of present occurrence of a taxon, excluding cases of vagrancy. (IUCN 2012). The area known or predicted cells occupied by a taxon within its extent of occurrence, represents suitable and occupied habitats is known as the area of occupancy (AOO). 
-AOO is calculatlaed as the area of all  for the species. The resolution will be 2x2km as required by IUCN.
+The Extent of Occurrence (EOO) is the area contained within the shortest continuous imaginary boundary which can be drawn to encompass all the known, inferred or projected sites of present occurrence of a taxon, excluding cases of vagrancy. (IUCN 2012)
+
+You may want to exclude areas that are not suitable for your species when computing EOO. This is feasible using the logical argument exclude.area which will crop areas defined by the shapefile you provide with the argument country_map. Note that it is mandatory to provide a shapefile for country_map if exclude.area is TRUE. 
+
+Area of occupancy (AOO), is the area occupied by a taxon within its extent of occurrence. The measure reflects the fact that a taxon will not usually occur throughout the area of its extent of occurrence, which may contain unsuitable or unoccupied habitats.
+AOO is calculatlaed as the area of all known or predicted cells for the species. The resolution will be 2x2km as required by IUCN.
 
 ```{r land metrics}
 T_ornatus_CO_naMean_geo_range_100 <-
@@ -84,9 +88,26 @@ T_ornatus_CO_naMean_geo_range_100 <-
     lat_uncertainty = "lat_uncertainty",
     lon_uncertainty = "lon_uncertainty",
   )
-names(T_ornatus_CO_naMean_geo_range_100)[1] <- "Mean_EOO"
-names(T_ornatus_CO_naMean_geo_range_100)[2] <- "Mean_AOO"
+names(T_ornatus_CO_naMean_geo_range_100)[1] <- "naMean_EOO"
+names(T_ornatus_CO_naMean_geo_range_100)[2] <- "naMean_AOO"
 
+tictoc::tic(msg = "naMean_geo_range_1000", quiet =FALSE ) #5443.87 sec elapsed
+T_ornatus_CO_naMean_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    T_ornatus_CO_uncertainty_naMean,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lat_uncertainty = "lat_uncertainty",
+    lon_uncertainty = "lon_uncertainty",
+  )
+tictoc::toc()
+names(T_ornatus_CO_naMean_geo_range_1000)[1] <- "naMean_EOO"
+names(T_ornatus_CO_naMean_geo_range_1000)[2] <- "naMean_AOO"
+```
+
+```{r }
+tictoc::tic(msg = "naZero_geo_range_100", quiet =FALSE ) #526.59 sec elapsed
 T_ornatus_CO_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -96,10 +117,27 @@ T_ornatus_CO_naZero_geo_range_100 <-
     lat_uncertainty = "lat_uncertainty",
     lon_uncertainty = "lon_uncertainty",
   )
-names(T_ornatus_CO_naZero_geo_range_100)[1] <- "Zero_EOO"
-names(T_ornatus_CO_naZero_geo_range_100)[2] <- "Zero_AOO"
 
+tictoc::toc()
+names(T_ornatus_CO_naZero_geo_range_100)[1] <- "naZero_EOO"
+names(T_ornatus_CO_naZero_geo_range_100)[2] <- "naZero_AOO"
 
+tictoc::tic(msg = "naZero_geo_range_1000", quiet =FALSE ) #5413.85 sec elapsed
+T_ornatus_CO_naZero_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    T_ornatus_CO_uncertainty_naZero,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lat_uncertainty = "lat_uncertainty",
+    lon_uncertainty = "lon_uncertainty",
+  )
+tictoc::toc()
+names(T_ornatus_CO_naZero_geo_range_1000)[1] <- "naZero_EOO"
+names(T_ornatus_CO_naZero_geo_range_1000)[2] <- "naZero_AOO"
+```
+
+```{r naNA_geo_range}
 T_ornatus_CO_naNA_geo_range_100 <-
   random_geo_range(
     100,
@@ -109,28 +147,37 @@ T_ornatus_CO_naNA_geo_range_100 <-
     lat_uncertainty = "lat_uncertainty",
     lon_uncertainty = "lon_uncertainty",
   )
-names(T_ornatus_CO_naNA_geo_range_100)[1] <- "NA_EOO"
-names(T_ornatus_CO_naNA_geo_range_100)[2] <- "NA_AOO"
+names(T_ornatus_CO_naNA_geo_range_100)[1] <- "naNA_EOO"
+names(T_ornatus_CO_naNA_geo_range_100)[2] <- "naNA_AOO"
 
-T_ornatus_CO_georanges_100 <-
+T_ornatus_CO_naNA_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    T_ornatus_CO_uncertainty_naNA,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lat_uncertainty = "lat_uncertainty",
+    lon_uncertainty = "lon_uncertainty",
+  )
+names(T_ornatus_CO_naNA_geo_range_1000)[1] <- "naNA_EOO"
+names(T_ornatus_CO_naNA_geo_range_1000)[2] <- "naNA_AOO"
+```
+
+```{r save csv}
+T_ornatus_CO_100georanges <-
   cbind(
     T_ornatus_CO_naMean_geo_range_100,
     T_ornatus_CO_naZero_geo_range_100,
     T_ornatus_CO_naNA_geo_range_100
   )
 
-write.csv2(T_ornatus_CO_georanges_100, "~/GitHub/ENS Master/Chapter1/Chapter_uno/data/T_ornatus_CO_georanges_100.csv" )
+write.csv(T_ornatus_CO_100georanges, "C:/Users/Samuel/Documents/GitHub/ENS Master/Chapter1/Chapter_uno/Results/T_ornatus_CO_100georanges.csv" )
 
-T_ornatus_CO_georanges_100 <-
-  read_delim(
-    "data/T_ornatus_CO_georanges_100.csv",
-    ";",
-    dec = ",",
-    escape_double = FALSE,
-    trim_ws = TRUE
+T_ornatus_CO_1000georanges <-
+  cbind(
+    T_ornatus_CO_naMean_geo_range_1000,
+    T_ornatus_CO_naZero_geo_range_1000,
+    T_ornatus_CO_naNA_geo_range_1000
   )
 
-```
-
-
-
+write.csv(T_ornatus_CO_1000georanges, "C:/Users/Samuel/Documents/GitHub/ENS Master/Chapter1/Chapter_uno//Results/T_ornatus_CO_1000georanges.csv")
