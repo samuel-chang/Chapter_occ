@@ -4,74 +4,69 @@ author: "Samuel Chang"
 date: "6/4/2020"
 output: html_document
 ---
-```{r datasets with low uncertainty }
-#observed data set
-load("../data/L_wiedii_lowUnc.RData")
-observed <-
-  dplyr::select(L_wiedii_lowUnc,
-    decimalLatitude,
-    decimalLongitude,
-    species)
-observed.EOO <- EOO.computing(observed, exclude.area = T, country_map = land)
-
-L_wiedii_low_100georanges <-
-  read_csv(
-    "Results/L_wiedii_low_100georanges.csv",col_types = cols(X1 = col_skip(), X1_1 = col_skip())
-  )
-
-L_wiedii_low_1000georanges <- read_csv("Results/L_wiedii_low_1000georanges.csv")
-```
-
-```{r datasets with high uncertainty }
-#observed data set
+```{r observed datasets with high uncertainty }
+library(ConR)
 load("../data/L_wiedii_highUnc.RData")
 observed <-
   dplyr::select(L_wiedii_highUnc,
     decimalLatitude,
     decimalLongitude,
     species)
-observed.EOO <-
-  EOO.computing(observed, exclude.area = T, country_map = land)
+write.csv(observed, "../Results/observed.csv")
 
-L_wiedii_high_100georanges <-
-  read_csv("Results/L_wiedii_low_100georanges.csv")
+observed.IUCN <- IUCN.eval(observed, exclude.area = T, write_results = F)
+observed.EOO <- observed.IUCN$EOO
+observed.AOO <- observed.IUCN$AOO
+```
 
-L_wiedii_high_1000georanges <-
-  read_csv("Results/L_wiedii_high_1000georanges.csv")
+```{r load iteration results}
+L_wiedii_high_100georanges <- read.csv("../Results/L_wiedii_high_100georanges.csv")
+
+L_wiedii_high_1000georanges <- read.csv("../Results/L_wiedii_high_1000georanges.csv")
 ```
 
 ```{r #na as Mean  z-stat and hist}
 #Calculate a z-statistic for the EOO of the original data set compared to the EOO values of:
 
-##100 itertion is -0.5995791 (493.31 sec elapsed)
-(observed.EOO$EOO - mean(L_wiedii_high_100georanges$naMean_EOO)
+##100 itertion is -0.5995791
+###EOO_100
+(observed.EOO - mean(L_wiedii_high_100georanges$naMean_EOO) 
 ) / sd(L_wiedii_high_100georanges$naMean_EOO)
 
 hist(L_wiedii_high_100georanges$naMean_EOO,
-  main = "L. wiediee extent of occurrence, with mean ucertainty values for NA cells")
-abline(v = observed.EOO$EOO,
+  main = "L. wiediee EOO with mean ucertainty values for NA cells")
+abline(v = observed.EOO,
   col = "red")
 
+#AOO_100
+(observed.IUCN$AOO - mean(L_wiedii_high_100georanges$naMean_AOO)
+) / sd(L_wiedii_high_100georanges$naMean_AOO)
+
 #1000 iteration is -0.4048546
+#EOO_1000
 (observed.EOO$EOO - mean(L_wiedii_high_1000georanges$naMean_EOO)
 ) / sd(L_wiedii_high_1000georanges$naMean_EOO)
 
 hist(L_wiedii_high_1000georanges$naMean_EOO,
-  main = "L. wiediee extent of occurrence, with mean ucertainty values for NA cells")
+  main = "L. wiedii extent of occurrence, with mean ucertainty values for NA cells")
 abline(v = observed.EOO$EOO,
   col = "red")
+
+#AOO_1000
+(observed.IUCN$AOO - mean(L_wiedii_high_1000georanges$naMean_AOO)
+) / sd(L_wiedii_high_1000georanges$naMean_AOO)
 ```
 
 ```{r na as Zero  z-stat and hist}
 #Calculate a z-statistic for the EOO of the original data set compared to the EOO values of:
 
 #100 iteration is -0.9961994
-(observed.EOO$EOO - mean(L_wiedii_high_100georanges$naZero_EOO)
+(observed.EOO - mean(L_wiedii_high_100georanges$naZero_EOO)
 ) / sd(L_wiedii_high_100georanges$naZero_EOO)
 
 hist(L_wiedii_high_100georanges$naZero_EOO,
-  main = "L. wiediee extent of occurrence, with mean ucertainty values for NA cells")
-abline(v = observed.EOO$EOO,
+  main = "L. wiedii extent of occurrence, with zero ucertainty values for NA cells")
+abline(v = observed.EOO,
   col = "red")
 
 #1000 iteration is -0.8835011 --- 4551.01 sec elapsed
