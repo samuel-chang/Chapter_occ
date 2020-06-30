@@ -1,0 +1,351 @@
+---
+title: "T_ornatus_small_EC-vignette"
+author: "Samuel Chang"
+date: "3/5/2020"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{T_ornatus_small_EC-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEnECding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  ECmment = "#>"
+)
+```
+
+
+# 1. Load the occUncertain R package and small occurrence data set for T.ornatus in Ecuador
+```{r}
+library(occUncertain)
+
+load("../data/T_ornatus_EC.RData")
+
+small_observed <-
+  dplyr::select(T_ornatus_EC,
+    decimalLatitude,
+    decimalLongitude,
+    species)
+
+data(land)
+small.IUCN <- IUCN.eval(small_observed, exclude.area = T, write_results = F)
+small.EOO <- small.IUCN$EOO
+small.AOO <- small.IUCN$AOO
+```
+
+# 2. meters_to_decdeg function
+```{r uncertainty from meter to radian degrees}
+#NA as Zero
+small_naZero <-
+  meters_to_decdeg(
+    T_ornatus_EC,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as 0"
+  )
+
+small_naZero <-
+  cbind(T_ornatus_EC, small_naZero)
+
+small_naZero <- dplyr::select(
+  small_naZero,
+  decimalLatitude,
+  decimalLongitude,
+  lon_uncertainty,
+  lat_uncertainty,
+  species
+)
+  
+#NA as Mean
+small_naMean <-
+  meters_to_decdeg(
+    T_ornatus_EC,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as mean"
+  )
+
+small_naMean <-
+  cbind(T_ornatus_EC, small_naMean)
+
+small_naMean <- dplyr::select(
+  small_naMean,
+  decimalLatitude,
+  decimalLongitude,
+  lon_uncertainty,
+  lat_uncertainty,
+  species
+)
+
+#NA as NA
+small_naNA <-
+  meters_to_decdeg(
+    T_ornatus_EC,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as NA"
+  )
+
+small_naNA <-
+  cbind(T_ornatus_EC, small_naNA)
+
+small_naNA <-
+  dplyr::filter(small_naNA,!is.na(coordinateUncertaintyInMeters))
+small_naNA <- dplyr::select(
+  small_naNA,
+  decimalLatitude,
+  decimalLongitude,
+  lon_uncertainty,
+  lat_uncertainty,
+  species
+)
+```
+
+# 3. Using the random occurrences in land metrics with random_geo_range
+
+## `NA as Mean`
+```{r small_naMean geographic metrics}
+
+---- 
+      #1000 
+small_naMean_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    small_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(small_naMean_geo_range_1000)[1] <- "naMean_EOO"
+names(small_naMean_geo_range_1000)[2] <- "naMean_AOO"
+
+#Z-stat
+## EOO
+(small.EOO - mean(small_naMean_geo_range_1000$naMean_EOO)) / sd(small_naMean_geo_range_1000$naMean_EOO)
+
+#histogram
+hist(small_naMean_geo_range_1000$naMean_EOO,
+  main = "L. wiedii extent of occurrence, with mean uncertainty values for NA cells")
+abline(v = small.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(small.AOO - mean(small_naMean_geo_range_1000$naMean_AOO)) / sd(small_naMean_geo_range_1000$naMean_AOO)
+
+#histogram
+hist(small_naMean_geo_range_1000$naMean_AOO,
+  main = "L. wiedii area of occupancy, with mean uncertainty values for NA cells")
+abline(v = small.AOO,
+  col = "red")
+
+----
+      #100
+small_naMean_geo_range_100 <-
+  random_geo_range(
+    100,
+    small_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(small_naMean_geo_range_100)[1] <- "naMean_EOO"
+names(small_naMean_geo_range_100)[2] <- "naMean_AOO"
+
+#Z-stat
+## EOO
+(small.EOO - mean(small_naMean_geo_range_100$naMean_EOO)) / sd(small_naMean_geo_range_100$naMean_EOO)
+
+#histogram
+hist(small_naMean_geo_range_100$naMean_EOO,
+  main = "L. wiedii extent of occurrence, with mean uncertainty values for NA cells")
+abline(v = small.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(small.AOO - mean(small_naMean_geo_range_100$naMean_AOO)) / sd(small_naMean_geo_range_100$naMean_AOO)
+
+#histogram
+hist(small_naMean_geo_range_100$naMean_AOO,
+  main = "L. wiedii area of occupancy, with mean uncertainty values for NA cells")
+abline(v = small.AOO,
+  col = "red")
+```
+
+## `Na as Zero`
+```{r small_naZero_geo_range}
+----#1000
+small_naZero_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    small_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(small_naZero_geo_range_1000)[1] <- "naZero_EOO"
+names(small_naZero_geo_range_1000)[2] <- "naZero_AOO"
+
+#Z-stat
+## EOO
+(small.EOO - mean(small_naMean_geo_range_1000$naZero_EOO)) / sd(small_naMean_geo_range_1000$naZero_EOO)
+
+#histogram
+hist(small_naMean_geo_range_1000$naZero_EOO,
+  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
+abline(v = small.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(small.AOO - mean(small_naMean_geo_range_1000$naZero_AOO)) / sd(small_naMean_geo_range_1000$naZero_AOO)
+
+#histogram
+hist(small_naMean_geo_range_1000$naZero_AOO,
+  main = "L. wiedii area of occupancy, with zero uncertainty values for NA cells")
+abline(v = small.AOO,
+  col = "red")
+
+---- 
+      #100 
+small_naZero_geo_range_100 <-
+  random_geo_range(
+    100,
+    small_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(small_naZero_geo_range_100)[1] <- "naZero_EOO"
+names(small_naZero_geo_range_100)[2] <- "naZero_AOO"
+
+#Z-stat
+## EOO
+(small.EOO - mean(small_naZero_geo_range_100$naZero_EOO)) / sd(small_naZero_geo_range_100$naZero_EOO)
+
+#histogram
+hist(small_naZero_geo_range_100$naZero_EOO,
+  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
+abline(v = small.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(small.AOO - mean(small_naZero_geo_range_100$naZero_AOO)) / sd(small_naZero_geo_range_100$naZero_AOO)
+
+#histogram
+hist(small_naZero_geo_range_100$naZero_AOO,
+  main = "L. wiedii area of occupancy, with zero uncertainty values for NA cells")
+abline(v = small.AOO,
+  col = "red")
+
+```
+
+## `NA as NA`
+```{r L_wiedii_low_naNA_geo_range}
+
+---- 
+      #1000 
+small_naNA_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    small_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+
+names(small_naNA_geo_range_1000)[1] <- "naNA_EOO"
+names(small_naNA_geo_range_1000)[2] <- "naNA_AOO"
+
+#Z-stat
+## EOO
+(small.EOO - mean(small_naNA_geo_range_1000$naNA_EOO)) / sd(small_naNA_geo_range_1000$naNA_EOO)
+
+#histogram
+hist(small_naNA_geo_range_1000$naNA_EOO,
+  main = "L. wiedii extent of occurrence, without NA uncertainty cells")
+abline(v = small.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(small.AOO - mean(small_naNA_geo_range_1000$naZero_AOO)) / sd(small_naNA_geo_range_1000$naZero_AOO)
+
+#histogram
+hist(small_naNA_geo_range_1000$naZero_AOO,
+  main = "L. wiedii area of occupancy, without NA uncertainty cells")
+abline(v = small.AOO,
+  col = "red")
+
+---- 
+      #100
+small_naNA_geo_range_100 <-
+  random_geo_range(
+    100,
+    small_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+
+names(small_naNA_geo_range_100)[1] <- "naNA_EOO"
+names(small_naNA_geo_range_100)[2] <- "naNA_AOO"
+
+#Z-stat
+## EOO
+(small.EOO - mean(small_naNA_geo_range_100$naNA_EOO)) / sd(small_naNA_geo_range_100$naNA_EOO)
+
+#histogram
+hist(small_naNA_geo_range_100$naNA_EOO,
+  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
+abline(v = small.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(small.EOO - mean(small_naNA_geo_range_100$naNA_AOO)) / sd(small_naNA_geo_range_100$naNA_AOO)
+
+#histogram
+hist(small_naNA_geo_range_100$naNA_AOO,
+  main = "L. wiedii area of occupancy, without NA uncertainty cells")
+abline(v = small.AOO,
+  col = "red")
+```
+
+# Save Results as CSV
+```{r csv iterations}
+small_100georanges <-
+  cbind(
+    small_naMean_geo_range_100,
+    small_naZero_geo_range_100,
+    small_naNA_geo_range_100
+  )
+write.csv(small_100georanges, "../Results/small_100georanges.csv")
+
+small_1000georanges <-
+  cbind(
+    small_naMean_geo_range_1000,
+    small_naZero_geo_range_1000,
+    small_naNA_geo_range_1000
+  )
+write.csv(small_1000georanges, "../Results/small_EC_1000georanges.csv" )
+```

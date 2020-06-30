@@ -1,10 +1,10 @@
 ---
-title: "occUncertain-vigentte"
+title: "lowUnc-vignette"
 author: "Samuel Chang"
 date: "3/5/2020"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{occUncertain-vigentte}
+  %\VignetteIndexEntry{lowUnc-vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,24 +17,27 @@ knitr::opts_chunk$set(
 ```
 
 
-# 1. Load the occUncertain R package and dataset
+# 1. Load the occUncertain R package and data set
 ```{r}
 library(occUncertain)
 
-#To demonstrate the use of the package occUncertain we used a a small wild cat in Ecuador and Colombia, the margay (*Leopardus weidii*). The data set of 126 verified georeferenced occurrence records, includes low uncertainty below 3000 meters and NA uncertainty records. The occurrences dataset are from the Global Biodiversity Information Facility (19 May 2020) GBIF Occurrence Download https://doi.org/10.15468/dl.s7tq24
-
 load("../data/L_wiedii_lowUnc.RData")
 
+lowUnc_observed <-
+  dplyr::select(L_wiedii_lowUnc,
+    decimalLatitude,
+    decimalLongitude,
+    species)
+
+data(land)
+lowUnc.IUCN <- IUCN.eval(lowUnc_observed, exclude.area = T, write_results = F)
+lowUnc.EOO <- lowUnc.IUCN$EOO
+lowUnc.AOO <- lowUnc.IUCN$AOO
 ```
 
 # 2. meters_to_decdeg function
-
-The function **meters_to_decdeg** transforms the units into radian degrees for each occurence point. Its impotant to consider the fact that as one moves away from the equator towards a pole, one degree of longitude is multiplied by the cosine of the latitude, decreasing the distance, approaching zero at the pole.  
-
-In case of having an NA values for the uncertaity, the function includes a parameter *na_action*; which enacts distance options for NA values. The options are "NA as zero" , "NA as mean", and "NA as NA".
-
 ```{r uncertainty from meter to radian degrees}
-#NA as 0
+#NA as Zero
 L_wiedii_lowUnc_naZero <-
   meters_to_decdeg(
     L_wiedii_lowUnc,
@@ -43,14 +46,15 @@ L_wiedii_lowUnc_naZero <-
     distance = "coordinateUncertaintyInMeters",
     na_action = "NA as 0"
   )
-head(L_wiedii_lowUnc_naZero)
-
 
 L_wiedii_lowUnc_naZero <-
   cbind(L_wiedii_lowUnc, L_wiedii_lowUnc_naZero)
-head(L_wiedii_lowUnc_naZero)
 
-#NA as mean
+L_wiedii_lowUnc_naZero <- dplyr::select(L_wiedii_lowUnc_naZero, decimalLatitude,
+    decimalLongitude,
+    lon_uncertainty, lat_uncertainty, species)
+
+#NA as Mean
 L_wiedii_lowUnc_naMean <-
   meters_to_decdeg(
     L_wiedii_lowUnc,
@@ -59,12 +63,13 @@ L_wiedii_lowUnc_naMean <-
     distance = "coordinateUncertaintyInMeters",
     na_action = "NA as mean"
   )
-head(L_wiedii_lowUnc_naMean)
-
 
 L_wiedii_lowUnc_naMean <-
   cbind(L_wiedii_lowUnc, L_wiedii_lowUnc_naMean)
-head(L_wiedii_lowUnc_naMean)
+
+L_wiedii_lowUnc_naMean <- dplyr::select(L_wiedii_lowUnc_naMean, decimalLatitude,
+    decimalLongitude,
+    lon_uncertainty, lat_uncertainty, species)
 
 #NA as NA
 L_wiedii_lowUnc_naNA <-
@@ -75,20 +80,24 @@ L_wiedii_lowUnc_naNA <-
     distance = "coordinateUncertaintyInMeters",
     na_action = "NA as NA"
   )
-head(L_wiedii_lowUnc_naNA)
-
 
 L_wiedii_lowUnc_naNA <-
   cbind(L_wiedii_lowUnc, L_wiedii_lowUnc_naNA)
-head(L_wiedii_lowUnc_naNA)
 
 L_wiedii_lowUnc_naNA <- dplyr::filter(L_wiedii_lowUnc_naNA, !is.na(coordinateUncertaintyInMeters))
+L_wiedii_lowUnc_naNA <- dplyr::select(L_wiedii_lowUnc_naNA, decimalLatitude,
+    decimalLongitude,
+    lon_uncertainty, lat_uncertainty, species)
+
 ```
 
-# 3. Using the random occurences in land metrics with random_geo_range
-```{r geographic metrics}
-library(ConR)
-tictoc::tic(msg = "1000.naMean" , quiet = FALSE) #1000.naMean: 4568.72 sec elapsed
+# 3. Using the random occurrences in land metrics with random_geo_range
+
+`NA as Mean`
+```{r L_wiedii_low_naMean geographic metrics}
+
+---- 
+      #1000 
 L_wiedii_low_naMean_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -99,12 +108,31 @@ L_wiedii_low_naMean_geo_range_1000 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-tictoc::toc()
-
 names(L_wiedii_low_naMean_geo_range_1000)[1] <- "naMean_EOO"
 names(L_wiedii_low_naMean_geo_range_1000)[2] <- "naMean_AOO"
 
-tictoc::tic(msg = "100.naMean" , quiet = FALSE) #100.naMean: 418.96 sec elapsed
+#Z-stat
+## EOO
+(lowUnc.EOO - mean(L_wiedii_low_naMean_geo_range_1000$naMean_EOO)) / sd(L_wiedii_low_naMean_geo_range_1000$naMean_EOO)
+
+#histogram
+hist(L_wiedii_low_naMean_geo_range_1000$naMean_EOO,
+  main = "L. wiedii extent of occurrence, with mean uncertainty values for NA cells")
+abline(v = lowUnc.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(lowUnc.AOO - mean(L_wiedii_low_naMean_geo_range_1000$naMean_AOO)) / sd(L_wiedii_low_naMean_geo_range_1000$naMean_AOO)
+
+#histogram
+hist(L_wiedii_low_naMean_geo_range_1000$naMean_AOO,
+  main = "L. wiedii area of occupancy, with mean uncertainty values for NA cells")
+abline(v = lowUnc.AOO,
+  col = "red")
+
+----
+      #100
 L_wiedii_low_naMean_geo_range_100 <-
   random_geo_range(
     100,
@@ -115,15 +143,35 @@ L_wiedii_low_naMean_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-tictoc::toc()
-
 names(L_wiedii_low_naMean_geo_range_100)[1] <- "naMean_EOO"
 names(L_wiedii_low_naMean_geo_range_100)[2] <- "naMean_AOO"
+
+#Z-stat
+## EOO
+(lowUnc.EOO - mean(L_wiedii_low_naMean_geo_range_100$naMean_EOO)) / sd(L_wiedii_low_naMean_geo_range_100$naMean_EOO)
+
+#histogram
+hist(L_wiedii_low_naMean_geo_range_100$naMean_EOO,
+  main = "L. wiedii extent of occurrence, with mean uncertainty values for NA cells")
+abline(v = lowUnc.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(lowUnc.AOO - mean(L_wiedii_low_naMean_geo_range_100$naMean_AOO)) / sd(L_wiedii_low_naMean_geo_range_100$naMean_AOO)
+
+#histogram 
+hist(L_wiedii_low_naMean_geo_range_100$naMean_AOO,
+  main = "L. wiedii area of occupancy, with mean uncertainty values for NA cells")
+abline(v = lowUnc.AOO,
+  col = "red")
 ```
 
+`naZero`
 ```{r L_wiedii_low_naZero_geo_range}
-tictoc::tic(msg = "1000.naZero" , quiet = FALSE) #1000.naZero: 4497.16 sec elapsed
-
+----
+  
+      #1000
 L_wiedii_low_naZero_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -134,11 +182,31 @@ L_wiedii_low_naZero_geo_range_1000 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-tictoc::toc()
 names(L_wiedii_low_naZero_geo_range_1000)[1] <- "naZero_EOO"
 names(L_wiedii_low_naZero_geo_range_1000)[2] <- "naZero_AOO"
 
-tictoc::tic(msg = "100.naZero" , quiet = FALSE) #100.naZero: 444.04 sec elapsedy
+#Z-stat
+## EOO
+(lowUnc.EOO - mean(L_wiedii_low_naMean_geo_range_1000$naZero_EOO)) / sd(L_wiedii_low_naMean_geo_range_1000$naZero_EOO)
+
+#histogram
+hist(L_wiedii_low_naMean_geo_range_1000$naZero_EOO,
+  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
+abline(v = lowUnc.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(lowUnc.AOO - mean(L_wiedii_low_naMean_geo_range_1000$naZero_AOO)) / sd(L_wiedii_low_naMean_geo_range_1000$naZero_AOO)
+
+#histogram
+hist(L_wiedii_low_naMean_geo_range_1000$naZero_AOO,
+  main = "L. wiedii area of occupancy, with zero uncertainty values for NA cells")
+abline(v = lowUnc.AOO,
+  col = "red")
+
+---- 
+      #100 
 L_wiedii_low_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -149,14 +217,36 @@ L_wiedii_low_naZero_geo_range_100 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-tictoc::toc()
 names(L_wiedii_low_naZero_geo_range_100)[1] <- "naZero_EOO"
 names(L_wiedii_low_naZero_geo_range_100)[2] <- "naZero_AOO"
+
+#Z-stat
+## EOO
+(lowUnc.EOO - mean(L_wiedii_low_naZero_geo_range_100$naZero_EOO)) / sd(L_wiedii_low_naZero_geo_range_100$naZero_EOO)
+
+#histogram
+hist(L_wiedii_low_naZero_geo_range_100$naZero_EOO,
+  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
+abline(v = lowUnc.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(lowUnc.AOO - mean(L_wiedii_low_naZero_geo_range_100$naZero_AOO)) / sd(L_wiedii_low_naZero_geo_range_100$naZero_AOO)
+
+#histogram
+hist(L_wiedii_low_naZero_geo_range_100$naZero_AOO,
+  main = "L. wiedii area of occupancy, with zero uncertainty values for NA cells")
+abline(v = lowUnc.AOO,
+  col = "red")
+
 ```
 
+`NA as NA`
 ```{r L_wiedii_low_naNA_geo_range}
-library(tictoc)
-tictoc::tic(msg = "1000.naNA", quiet = FALSE)
+
+---- 
+      #1000 
 L_wiedii_low_naNA_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -167,14 +257,33 @@ L_wiedii_low_naNA_geo_range_1000 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-tictoc::toc()
 
 names(L_wiedii_low_naNA_geo_range_1000)[1] <- "naNA_EOO"
 names(L_wiedii_low_naNA_geo_range_1000)[2] <- "naNA_AOO"
 
-library(tictoc)
-tictoc::tic(msg = "100.naNA", quiet = FALSE)   #443.32 sec elapsed
-L_wiedii_low_naNA_geo_range_100 <- L_wiedii_low_naNA_geo_range_1000 <-
+#Z-stat
+## EOO
+(lowUnc.EOO - mean(L_wiedii_low_naNA_geo_range_1000$naNA_EOO)) / sd(L_wiedii_low_naNA_geo_range_1000$naNA_EOO)
+
+#histogram
+hist(L_wiedii_low_naNA_geo_range_1000$naNA_EOO,
+  main = "L. wiedii extent of occurrence, without NA uncertainty cells")
+abline(v = lowUnc.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(lowUnc.AOO - mean(L_wiedii_low_naNA_geo_range_1000$naZero_AOO)) / sd(L_wiedii_low_naNA_geo_range_1000$naZero_AOO)
+
+#histogram
+hist(L_wiedii_low_naNA_geo_range_1000$naZero_AOO,
+  main = "L. wiedii area of occupancy, without NA uncertainty cells")
+abline(v = lowUnc.AOO,
+  col = "red")
+
+---- 
+      #100
+L_wiedii_low_naNA_geo_range_100 <-
   random_geo_range(
     100,
     L_wiedii_lowUnc_naNA,
@@ -184,29 +293,46 @@ L_wiedii_low_naNA_geo_range_100 <- L_wiedii_low_naNA_geo_range_1000 <-
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty"
   )
-tictoc::toc()
 
 names(L_wiedii_low_naNA_geo_range_100)[1] <- "naNA_EOO"
 names(L_wiedii_low_naNA_geo_range_100)[2] <- "naNA_AOO"
+
+#Z-stat
+## EOO
+(lowUnc.EOO - mean(L_wiedii_low_naNA_geo_range_100$naNA_EOO)) / sd(L_wiedii_low_naNA_geo_range_100$naNA_EOO)
+
+#histogram
+hist(L_wiedii_low_naNA_geo_range_100$naNA_EOO,
+  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
+abline(v = lowUnc.EOO,
+  col = "red")
+
+#Z-stat
+## AOO
+(lowUnc.EOO - mean(L_wiedii_low_naNA_geo_range_100$naNA_AOO)) / sd(L_wiedii_low_naNA_geo_range_100$naNA_AOO)
+
+#histogram
+hist(L_wiedii_low_naNA_geo_range_100$naNA_AOO,
+  main = "L. wiedii area of occupancy, without NA uncertainty cells")
+abline(v = lowUnc.AOO,
+  col = "red")
 ```
 
+# Save Results as CSV
 ```{r csv iterations}
-
-L_wiedii_low_100georanges <-
+lowUnc_100georanges <-
   cbind(
     L_wiedii_low_naMean_geo_range_100,
     L_wiedii_low_naZero_geo_range_100,
     L_wiedii_low_naNA_geo_range_100
   )
-write.csv(L_wiedii_low_100georanges, "~/GitHub/ENS Master/Chapter1/Chapter_uno/Results/L_wiedii_low_100georanges.csv")
+write.csv(lowUnc_100georanges, "../Results/L_wiedii_low_100georanges.csv")
 
-L_wiedii_low_1000georanges <-
+lowUnc_1000georanges <-
   cbind(
     L_wiedii_low_naMean_geo_range_1000,
     L_wiedii_low_naZero_geo_range_1000,
     L_wiedii_low_naNA_geo_range_1000
   )
-write.csv(L_wiedii_low_1000georanges, "../Results/L_wiedii_low_1000georanges.csv" )
+write.csv(lowUnc_1000georanges, "../Results/lowUnc_1000georanges.csv" )
 ```
-
-
