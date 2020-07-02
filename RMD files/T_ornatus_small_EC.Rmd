@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 # 1. Load the occUncertain R package and small occurrence data set for T.ornatus in Ecuador
 ```{r}
 library(occUncertain)
+library(ConR)
 
 load("../data/T_ornatus_EC.RData")
 
@@ -111,7 +112,7 @@ small_naNA <- dplyr::select(
 ## `NA as Mean`
 ```{r small_naMean geographic metrics}
 
----- 
+#---- 
       #1000 
 small_naMean_geo_range_1000 <-
   random_geo_range(
@@ -146,7 +147,7 @@ hist(small_naMean_geo_range_1000$naMean_AOO,
 abline(v = small.AOO,
   col = "red")
 
-----
+#----
       #100
 small_naMean_geo_range_100 <-
   random_geo_range(
