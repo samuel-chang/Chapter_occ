@@ -7,16 +7,7 @@ output: html_document
 ```{r observed datasets with high uncertainty }
 library(ConR)
 load("../data/L_wiedii_highUnc.RData")
-observed <-
-  dplyr::select(L_wiedii_highUnc,
-    decimalLatitude,
-    decimalLongitude,
-    species)
-write.csv(observed, "../Results/observed.csv")
 
-observed.IUCN <- IUCN.eval(observed, exclude.area = T, write_results = F)
-observed.EOO <- observed.IUCN$EOO
-observed.AOO <- observed.IUCN$AOO
 ```
 
 ```{r load iteration results}
@@ -27,34 +18,23 @@ L_wiedii_high_1000georanges <- read.csv("../Results/L_wiedii_high_1000georanges.
 
 ```{r #na as Mean  z-stat and hist}
 #Calculate a z-statistic for the EOO of the original data set compared to the EOO values of:
-
-##100 itertion is -0.5995791
-###EOO_100
-(observed.EOO - mean(L_wiedii_high_100georanges$naMean_EOO) 
+(observed.EOO - mean(L_wiedii_high_100georanges$naMean_EOO)
 ) / sd(L_wiedii_high_100georanges$naMean_EOO)
 
-hist(L_wiedii_high_100georanges$naMean_EOO,
-  main = "L. wiediee EOO with mean ucertainty values for NA cells")
+hist(L_wiedii_high_100georanges$naZero_EOO,
+  main = "L. wiedii extent of occurrence, with zero ucertainty values for NA cells")
 abline(v = observed.EOO,
   col = "red")
 
-#AOO_100
-(observed.IUCN$AOO - mean(L_wiedii_high_100georanges$naMean_AOO)
-) / sd(L_wiedii_high_100georanges$naMean_AOO)
-
-#1000 iteration is -0.4048546
-#EOO_1000
+##100 itertion is -0.5995791
 (observed.EOO$EOO - mean(L_wiedii_high_1000georanges$naMean_EOO)
-) / sd(L_wiedii_high_1000georanges$naMean_EOO)
+) / sd(L_wiedii_high_1000georanges$naZero_EOO)
 
-hist(L_wiedii_high_1000georanges$naMean_EOO,
-  main = "L. wiedii extent of occurrence, with mean ucertainty values for NA cells")
+hist(L_wiedii_high_1000georanges$naZero_EOO,
+  main = "L. wiediee extent of occurrence, with mean ucertainty values for NA cells")
 abline(v = observed.EOO$EOO,
   col = "red")
 
-#AOO_1000
-(observed.IUCN$AOO - mean(L_wiedii_high_1000georanges$naMean_AOO)
-) / sd(L_wiedii_high_1000georanges$naMean_AOO)
 ```
 
 ```{r na as Zero  z-stat and hist}
