@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 # 1. Load the occUncertain R package and small occurrence data set for T.ornatus in Ecuador
 ```{r}
 library(occUncertain)
+library(ConR)
 
 load("../data/T_ornatus_EC.RData")
 
