@@ -1,0 +1,388 @@
+---
+title: "T_ornatus_EC-vignette"
+author: "Samuel Chang"
+date: "3/5/2020"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{T_ornatus_EC-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEnECding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  ECmment = "#>"
+)
+```
+
+
+# 1. Load the occUncertain R package and small occurrence data set for T.ornatus in Ecuador
+```{r}
+library(occUncertain)
+library(ConR)
+
+load("../data/T_ornatus/Tremarctos_ornatus.rda")
+
+observed <-
+  dplyr::select(Tremarctos_ornatus,
+    decimalLatitude,
+    decimalLongitude,
+    species)
+
+data(land)
+full.IUCN <- IUCN.eval(observed, exclude.area = T, write_results = F)
+full.EOO <- full.IUCN$EOO #-->1264
+full.AOO <- full.IUCN$AOO #-->436916.9
+
+
+observed <-
+  dplyr::select(Tremarctos_ornatus,
+    decimalLatitude,
+    decimalLongitude,
+    coordinateUncertaintyInMeters,
+    species)
+```
+
+# 2. meters_to_decdeg function
+```{r uncertainty from meter to radian degrees}
+#NA as Zero
+full_naZero <-
+  meters_to_decdeg(
+    observed,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as 0"
+  )
+
+full_naZero <-
+  cbind(observed, full_naZero)
+
+full_naZero <- dplyr::select(
+  full_naZero,
+  decimalLatitude,
+  decimalLongitude,
+  lon_uncertainty,
+  lat_uncertainty,
+  species
+)
+  
+#NA as Mean
+full_naMean <-
+  meters_to_decdeg(
+    observed,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as mean"
+  )
+
+full_naMean <-
+  cbind(observed, full_naMean)
+
+full_naMean <- dplyr::select(
+  full_naMean,
+  decimalLatitude,
+  decimalLongitude,
+  lon_uncertainty,
+  lat_uncertainty,
+  species
+)
+
+#NA as NA
+full_naNA <-
+  meters_to_decdeg(
+    observed,
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    distance = "coordinateUncertaintyInMeters",
+    na_action = "NA as NA"
+  )
+
+full_naNA <-
+  cbind(observed, full_naNA)
+
+full_naNA <-
+  dplyr::filter(full_naNA,!is.na(coordinateUncertaintyInMeters))
+full_naNA <- dplyr::select(
+  full_naNA,
+  decimalLatitude,
+  decimalLongitude,
+  lon_uncertainty,
+  lat_uncertainty,
+  species
+)
+```
+
+# 3. Using the random occurrences in land metrics with random_geo_range
+
+## `NA as Mean`
+```{r naMean geographic metrics}
+#1000 
+#---- 
+naMean_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    full_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(naMean_geo_range_1000)[1] <- "naMean_EOO"
+names(naMean_geo_range_1000)[2] <- "naMean_AOO"
+
+#Z-stat
+## EOO
+(full.EOO - mean(naMean_geo_range_1000$naMean_EOO)) / sd(naMean_geo_range_1000$naMean_EOO)
+
+#Z-stat
+## AOO
+(small.AOO - mean(naMean_geo_range_1000$naMean_AOO)) / sd(naMean_geo_range_1000$naMean_AOO)
+#----
+      #100
+naMean_geo_range_100 <-
+  random_geo_range(
+    100,
+    full_naMean,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(naMean_geo_range_100)[1] <- "naMean_EOO"
+names(naMean_geo_range_100)[2] <- "naMean_AOO"
+
+#Z-stat
+## EOO --> -1.913111
+(full.EOO - mean(naMean_geo_range_100$naMean_EOO)) / sd(naMean_geo_range_100$naMean_EOO)
+
+## AOO --> -95.47244
+(full.AOO - mean(naMean_geo_range_100$naMean_AOO)) / sd(naMean_geo_range_100$naMean_AOO)
+save(naMean_geo_range_100, file = "../Results/naMean_geo_range_100.rda")
+```
+
+## `Na as Zero`
+```{r naZero_geo_range}
+#1000
+#----
+naZero_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    full_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(naZero_geo_range_1000)[1] <- "naZero_EOO"
+names(naZero_geo_range_1000)[2] <- "naZero_AOO"
+
+#Z-stat
+## EOO
+(full.EOO - mean(naMean_geo_range_1000$naZero_EOO)) / sd(naMean_geo_range_1000$naZero_EOO)
+
+## AOO
+(full.AOO - mean(naMean_geo_range_1000$naZero_AOO)) / sd(naMean_geo_range_1000$naZero_AOO)
+#---- 
+      #100 
+naZero_geo_range_100 <-
+  random_geo_range(
+    100,
+    full_naZero,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+names(naZero_geo_range_100)[1] <- "naZero_EOO"
+names(naZero_geo_range_100)[2] <- "naZero_AOO"
+
+#Z-stat
+## EOO --> -1.110215
+(full.EOO - mean(naZero_geo_range_100$naZero_EOO)) / sd(naZero_geo_range_100$naZero_EOO)
+
+## AOO --> -7.015385
+(full.AOO - mean(naZero_geo_range_100$naZero_AOO)) / sd(naZero_geo_range_100$naZero_AOO)
+
+save(naZero_geo_range_100, file = "../Results/naZero_geo_range_100.rda")
+```
+
+## `NA as NA`
+```{r L_wiedii_low_naNA_geo_range}
+#1000
+#---- 
+naNA_geo_range_1000 <-
+  random_geo_range(
+    1000,
+    full_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+
+names(naNA_geo_range_1000)[1] <- "naNA_EOO"
+names(naNA_geo_range_1000)[2] <- "naNA_AOO"
+
+#Z-stat
+## EOO
+(full.EOO - mean(naNA_geo_range_1000$naNA_EOO)) / sd(naNA_geo_range_1000$naNA_EOO)
+
+## AOO
+(full.AOO - mean(naNA_geo_range_1000$naZero_AOO)) / sd(naNA_geo_range_1000$naZero_AOO)
+#---- 
+      #100
+naNA_geo_range_100 <-
+  random_geo_range(
+    100,
+    full_naNA,
+    taxa_col = "species",
+    lat_col = "decimalLatitude",
+    lon_col = "decimalLongitude",
+    lon_uncertainty = "lon_uncertainty",
+    lat_uncertainty = "lat_uncertainty"
+  )
+
+names(naNA_geo_range_100)[1] <- "naNA_EOO"
+names(naNA_geo_range_100)[2] <- "naNA_AOO"
+
+#Z-stat
+## EOO --> 2.796991
+(full.EOO - mean(naNA_geo_range_100$naNA_EOO)) / sd(naNA_geo_range_100$naNA_EOO)
+
+## AOO --> 155.0559
+(full.AOO - mean(naNA_geo_range_100$naNA_AOO)) / sd(naNA_geo_range_100$naNA_AOO)
+```
+
+# Save Results as CSV
+```{r csv iterations}
+full_100georanges <-
+  cbind(
+    naMean_geo_range_100,
+    naZero_geo_range_100,
+    naNA_geo_range_100
+  )
+save(full_100georanges, file = "../Results/full_100georanges.rda")
+
+full_1000georanges <-
+  cbind(
+    naMean_geo_range_1000,
+    naZero_geo_range_1000,
+    naNA_geo_range_1000
+  )
+save(full_100georanges, file = "../Results/full_100georanges.rda")
+
+```
+
+```{r 100 iterations echo=FALSE, fig.width = 10, fig.height= 10}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ggrepel)
+
+theme_set(theme_gray())
+
+load("../Results/full_100georanges.rda")
+EOO_full_100georanges <- dplyr::select(full_100georanges, matches("EOO"))
+
+AOO_large_100georanges <- dplyr::select(full_100georanges, matches("AOO"))
+
+
+grid.arrange(
+  ggplot(data = EOO_full_100georanges, aes(naMean_EOO)) + geom_histogram() +
+    geom_vline(xintercept = full.EOO, color = "red"),
+  ggplot(data = EOO_full_100georanges, aes(naZero_EOO)) + geom_histogram() +
+    geom_vline(xintercept = full.EOO, color = "red"),
+  ggplot(data = EOO_full_100georanges, aes(naNA_EOO)) + geom_histogram() +
+    geom_vline(xintercept = full.EOO, color = "red"),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 100 EOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador and Colombia",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+
+grid.arrange(
+  ggplot(data = AOO_large_100georanges, aes(naMean_AOO)) + geom_histogram() +
+    geom_vline(xintercept = full.AOO, color = "red"),
+  ggplot(data = AOO_large_100georanges, aes(naZero_AOO)) + geom_histogram() +
+    geom_vline(xintercept = full.AOO, color = "red"),
+  ggplot(data = AOO_large_100georanges, aes(naNA_AOO)) + geom_histogram() +
+    geom_vline(xintercept = full.AOO, color = "red"),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 100 AOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador and Colombia",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+```
+
+```{r 1000 iterations echo=FALSE, fig.width = 10, fig.height= 10}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ggrepel)
+
+theme_set(theme_gray())
+
+load("../Results/full_1000georanges.rda")
+EOO_full_1000georanges <- dplyr::select(full_1000georanges, matches("EOO"))
+
+AOO_large_1000georanges <- dplyr::select(full_1000georanges, matches("AOO"))
+
+
+grid.arrange(
+  ggplot(data = EOO_full_1000georanges, aes(naMean_EOO)) + geom_histogram() +
+    geom_vline(xintercept = full.EOO, color = "red"),
+  ggplot(data = EOO_full_1000georanges, aes(naZero_EOO)) + geom_histogram() +
+    geom_vline(xintercept = full.EOO, color = "red"),
+  ggplot(data = EOO_full_1000georanges, aes(naNA_EOO)) + geom_histogram() +
+    geom_vline(xintercept = full.EOO, color = "red"),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 1000 EOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador and Colombia",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+
+grid.arrange(
+  ggplot(data = AOO_large_1000georanges, aes(naMean_AOO)) + geom_histogram() +
+    geom_vline(xintercept = full.AOO, color = "red"),
+  ggplot(data = AOO_large_1000georanges, aes(naZero_AOO)) + geom_histogram() +
+    geom_vline(xintercept = full.AOO, color = "red"),
+  ggplot(data = AOO_large_1000georanges, aes(naNA_AOO)) + geom_histogram() +
+    geom_vline(xintercept = full.AOO, color = "red"),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 1000 AOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador and Colombia",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+```

@@ -22,18 +22,25 @@ knitr::opts_chunk$set(
 library(occUncertain)
 library(ConR)
 
-load("../data/T_ornatus_EC.RData")
+load("../data/T_ornatus/T_ornatus_Ec.rda")
 
 small_observed <-
-  dplyr::select(T_ornatus_EC,
+  dplyr::select(T_ornatus_Ec,
     decimalLatitude,
     decimalLongitude,
     species)
 
 data(land)
 small.IUCN <- IUCN.eval(small_observed, exclude.area = T, write_results = F)
-small.EOO <- small.IUCN$EOO
-small.AOO <- small.IUCN$AOO
+small.EOO <- small.IUCN$EOO #456
+small.AOO <- small.IUCN$AOO #49849
+
+small_observed <-
+  dplyr::select(T_ornatus_Ec,
+    decimalLatitude,
+    decimalLongitude,
+    coordinateUncertaintyInMeters,
+    species)
 ```
 
 # 2. meters_to_decdeg function
@@ -41,7 +48,7 @@ small.AOO <- small.IUCN$AOO
 #NA as Zero
 small_naZero <-
   meters_to_decdeg(
-    T_ornatus_EC,
+    T_ornatus_Ec,
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     distance = "coordinateUncertaintyInMeters",
@@ -49,7 +56,7 @@ small_naZero <-
   )
 
 small_naZero <-
-  cbind(T_ornatus_EC, small_naZero)
+  cbind(T_ornatus_Ec, small_naZero)
 
 small_naZero <- dplyr::select(
   small_naZero,
@@ -63,7 +70,7 @@ small_naZero <- dplyr::select(
 #NA as Mean
 small_naMean <-
   meters_to_decdeg(
-    T_ornatus_EC,
+    T_ornatus_Ec,
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     distance = "coordinateUncertaintyInMeters",
@@ -71,7 +78,7 @@ small_naMean <-
   )
 
 small_naMean <-
-  cbind(T_ornatus_EC, small_naMean)
+  cbind(T_ornatus_Ec, small_naMean)
 
 small_naMean <- dplyr::select(
   small_naMean,
@@ -85,7 +92,7 @@ small_naMean <- dplyr::select(
 #NA as NA
 small_naNA <-
   meters_to_decdeg(
-    T_ornatus_EC,
+    T_ornatus_Ec,
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     distance = "coordinateUncertaintyInMeters",
@@ -93,12 +100,12 @@ small_naNA <-
   )
 
 small_naNA <-
-  cbind(T_ornatus_EC, small_naNA)
+  cbind(T_ornatus_Ec, small_naNA)
 
+#removes the NA cells to use function random_geo_range with uses lat/lon uncertainty
 small_naNA <-
-  dplyr::filter(small_naNA,!is.na(coordinateUncertaintyInMeters))
-small_naNA <- dplyr::select(
-  small_naNA,
+  dplyr::filter(small_naNA, !is.na(coordinateUncertaintyInMeters))
+small_naNA <- dplyr::select(small_naNA,
   decimalLatitude,
   decimalLongitude,
   lon_uncertainty,
@@ -110,10 +117,9 @@ small_naNA <- dplyr::select(
 # 3. Using the random occurrences in land metrics with random_geo_range
 
 ## `NA as Mean`
-```{r small_naMean geographic metrics}
-
+```{r small_naMean_geo_range}
+#1000
 #---- 
-      #1000 
 small_naMean_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -128,27 +134,14 @@ names(small_naMean_geo_range_1000)[1] <- "naMean_EOO"
 names(small_naMean_geo_range_1000)[2] <- "naMean_AOO"
 
 #Z-stat
-## EOO
+## EOO --> -4.329659
 (small.EOO - mean(small_naMean_geo_range_1000$naMean_EOO)) / sd(small_naMean_geo_range_1000$naMean_EOO)
 
-#histogram
-hist(small_naMean_geo_range_1000$naMean_EOO,
-  main = "L. wiedii extent of occurrence, with mean uncertainty values for NA cells")
-abline(v = small.EOO,
-  col = "red")
-
-#Z-stat
-## AOO
+## AOO --> -7.745828
 (small.AOO - mean(small_naMean_geo_range_1000$naMean_AOO)) / sd(small_naMean_geo_range_1000$naMean_AOO)
 
-#histogram
-hist(small_naMean_geo_range_1000$naMean_AOO,
-  main = "L. wiedii area of occupancy, with mean uncertainty values for NA cells")
-abline(v = small.AOO,
-  col = "red")
-
 #----
-      #100
+#100
 small_naMean_geo_range_100 <-
   random_geo_range(
     100,
@@ -163,29 +156,17 @@ names(small_naMean_geo_range_100)[1] <- "naMean_EOO"
 names(small_naMean_geo_range_100)[2] <- "naMean_AOO"
 
 #Z-stat
-## EOO
+## EOO --> -4.069339
 (small.EOO - mean(small_naMean_geo_range_100$naMean_EOO)) / sd(small_naMean_geo_range_100$naMean_EOO)
 
-#histogram
-hist(small_naMean_geo_range_100$naMean_EOO,
-  main = "L. wiedii extent of occurrence, with mean uncertainty values for NA cells")
-abline(v = small.EOO,
-  col = "red")
-
-#Z-stat
-## AOO
+## AOO --> -8.325899
 (small.AOO - mean(small_naMean_geo_range_100$naMean_AOO)) / sd(small_naMean_geo_range_100$naMean_AOO)
-
-#histogram
-hist(small_naMean_geo_range_100$naMean_AOO,
-  main = "L. wiedii area of occupancy, with mean uncertainty values for NA cells")
-abline(v = small.AOO,
-  col = "red")
 ```
 
 ## `Na as Zero`
 ```{r small_naZero_geo_range}
-----#1000
+#1000
+#----
 small_naZero_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -200,27 +181,16 @@ names(small_naZero_geo_range_1000)[1] <- "naZero_EOO"
 names(small_naZero_geo_range_1000)[2] <- "naZero_AOO"
 
 #Z-stat
-## EOO
-(small.EOO - mean(small_naMean_geo_range_1000$naZero_EOO)) / sd(small_naMean_geo_range_1000$naZero_EOO)
-
-#histogram
-hist(small_naMean_geo_range_1000$naZero_EOO,
-  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
-abline(v = small.EOO,
-  col = "red")
+## EOO --> -6.283048
+(small.EOO - mean(small_naZero_geo_range_1000$naZero_EOO)) / sd(small_naZero_geo_range_1000$naZero_EOO)
 
 #Z-stat
-## AOO
-(small.AOO - mean(small_naMean_geo_range_1000$naZero_AOO)) / sd(small_naMean_geo_range_1000$naZero_AOO)
-
-#histogram
-hist(small_naMean_geo_range_1000$naZero_AOO,
-  main = "L. wiedii area of occupancy, with zero uncertainty values for NA cells")
-abline(v = small.AOO,
-  col = "red")
-
----- 
-      #100 
+## AOO --> -7.914024
+(small.AOO - mean(small_naZero_geo_range_1000$naZero_AOO)) / sd(small_naZero_geo_range_1000$naZero_AOO)
+save(small_naZero_geo_range_1000, file = "../Results/small_naZero_geo_range_1000.rda")
+#----
+#100
+#---- 
 small_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -235,32 +205,17 @@ names(small_naZero_geo_range_100)[1] <- "naZero_EOO"
 names(small_naZero_geo_range_100)[2] <- "naZero_AOO"
 
 #Z-stat
-## EOO
+## EOO  --> -6.523924
 (small.EOO - mean(small_naZero_geo_range_100$naZero_EOO)) / sd(small_naZero_geo_range_100$naZero_EOO)
 
-#histogram
-hist(small_naZero_geo_range_100$naZero_EOO,
-  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
-abline(v = small.EOO,
-  col = "red")
-
-#Z-stat
-## AOO
+## AOO --> -6.965812
 (small.AOO - mean(small_naZero_geo_range_100$naZero_AOO)) / sd(small_naZero_geo_range_100$naZero_AOO)
-
-#histogram
-hist(small_naZero_geo_range_100$naZero_AOO,
-  main = "L. wiedii area of occupancy, with zero uncertainty values for NA cells")
-abline(v = small.AOO,
-  col = "red")
-
 ```
 
 ## `NA as NA`
-```{r L_wiedii_low_naNA_geo_range}
-
----- 
-      #1000 
+```{r small_naNA_geo_range}
+#1000
+#---- 
 small_naNA_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -276,27 +231,15 @@ names(small_naNA_geo_range_1000)[1] <- "naNA_EOO"
 names(small_naNA_geo_range_1000)[2] <- "naNA_AOO"
 
 #Z-stat
-## EOO
+## EOO --> -3.585046
 (small.EOO - mean(small_naNA_geo_range_1000$naNA_EOO)) / sd(small_naNA_geo_range_1000$naNA_EOO)
 
-#histogram
-hist(small_naNA_geo_range_1000$naNA_EOO,
-  main = "L. wiedii extent of occurrence, without NA uncertainty cells")
-abline(v = small.EOO,
-  col = "red")
+## AOO --> -6.130783
+(small.AOO - mean(small_naNA_geo_range_1000$naNA_AOO)) / sd(small_naNA_geo_range_1000$naNA_AOO)
 
-#Z-stat
-## AOO
-(small.AOO - mean(small_naNA_geo_range_1000$naZero_AOO)) / sd(small_naNA_geo_range_1000$naZero_AOO)
-
-#histogram
-hist(small_naNA_geo_range_1000$naZero_AOO,
-  main = "L. wiedii area of occupancy, without NA uncertainty cells")
-abline(v = small.AOO,
-  col = "red")
-
----- 
-      #100
+#----
+#100  
+#---- 
 small_naNA_geo_range_100 <-
   random_geo_range(
     100,
@@ -312,24 +255,11 @@ names(small_naNA_geo_range_100)[1] <- "naNA_EOO"
 names(small_naNA_geo_range_100)[2] <- "naNA_AOO"
 
 #Z-stat
-## EOO
+## EOO --> -3.669355
 (small.EOO - mean(small_naNA_geo_range_100$naNA_EOO)) / sd(small_naNA_geo_range_100$naNA_EOO)
 
-#histogram
-hist(small_naNA_geo_range_100$naNA_EOO,
-  main = "L. wiedii extent of occurrence, with zero uncertainty values for NA cells")
-abline(v = small.EOO,
-  col = "red")
-
-#Z-stat
-## AOO
-(small.EOO - mean(small_naNA_geo_range_100$naNA_AOO)) / sd(small_naNA_geo_range_100$naNA_AOO)
-
-#histogram
-hist(small_naNA_geo_range_100$naNA_AOO,
-  main = "L. wiedii area of occupancy, without NA uncertainty cells")
-abline(v = small.AOO,
-  col = "red")
+## AOO --> -5.382673
+(small.AOO - mean(small_naNA_geo_range_100$naNA_AOO)) / sd(small_naNA_geo_range_100$naNA_AOO)
 ```
 
 # Save Results as CSV
@@ -340,7 +270,7 @@ small_100georanges <-
     small_naZero_geo_range_100,
     small_naNA_geo_range_100
   )
-write.csv(small_100georanges, "../Results/small_100georanges.csv")
+save(small_100georanges, file = "../Results/Ec_100georanges.rda")
 
 small_1000georanges <-
   cbind(
@@ -348,5 +278,112 @@ small_1000georanges <-
     small_naZero_geo_range_1000,
     small_naNA_geo_range_1000
   )
-write.csv(small_1000georanges, "../Results/small_EC_1000georanges.csv" )
+save(small_1000georanges, file = "../Results/Ec_1000georanges.rda")
+
 ```
+
+```{r 100 iteration plots echo=FALSE, fig.width = 10, fig.height= 10}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ggrepel)
+
+theme_set(theme_gray())
+
+load("../Results/Ec_100georanges.rda")
+EOO_small_100georanges <- dplyr::select(small_100georanges, matches("EOO"))
+
+AOO_small_100georanges <- dplyr::select(small_100georanges, matches("AOO"))
+
+
+grid.arrange(
+  ggplot(data = EOO_small_100georanges, aes(naMean_EOO)) + geom_histogram() +
+    geom_vline(xintercept = small.EOO),
+  ggplot(data = EOO_small_100georanges, aes(naZero_EOO)) + geom_histogram() +
+    geom_vline(xintercept = small.EOO),
+  ggplot(data = EOO_small_100georanges, aes(naNA_EOO)) + geom_histogram() +
+    geom_vline(xintercept = small.EOO),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 100 EOO iterations using generated occurrences with degrees uncertainty and different NA_action parameters in Ecuador",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+
+grid.arrange(
+  ggplot(data = AOO_small_100georanges, aes(naMean_AOO)) + geom_histogram() +
+    geom_vline(xintercept = small.AOO),
+  ggplot(data = AOO_small_100georanges, aes(naZero_AOO)) + geom_histogram() +
+    geom_vline(xintercept = small.AOO),
+  ggplot(data = AOO_small_100georanges, aes(naNA_AOO)) + geom_histogram() +
+    geom_vline(xintercept = small.AOO),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 100 EOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+```
+```{r 1000 iteration plots echo=FALSE, fig.width = 10, fig.height= 10}
+library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ggrepel)
+
+theme_set(theme_gray())
+
+load("../Results/Ec_1000georanges.rda")
+EOO_small_1000georanges <- dplyr::select(small_1000georanges, matches("EOO"))
+
+AOO_small_1000georanges <- dplyr::select(small_1000georanges, matches("AOO"))
+
+
+grid.arrange(
+  ggplot(data = EOO_small_1000georanges, aes(naMean_EOO)) + geom_histogram() +
+    geom_vline(xintercept = small.EOO),
+  ggplot(data = EOO_small_1000georanges, aes(naZero_EOO)) + geom_histogram() +
+    geom_vline(xintercept = small.EOO),
+  ggplot(data = EOO_small_1000georanges, aes(naNA_EOO)) + geom_histogram() +
+    geom_vline(xintercept = small.EOO),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 1000 EOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+
+grid.arrange(
+  ggplot(data = AOO_small_1000georanges, aes(naMean_AOO)) + geom_histogram() +
+    geom_vline(xintercept = small.AOO),
+  ggplot(data = AOO_small_1000georanges, aes(naZero_AOO)) + geom_histogram() +
+    geom_vline(xintercept = small.AOO),
+  ggplot(data = AOO_small_1000georanges, aes(naNA_AOO)) + geom_histogram() +
+    geom_vline(xintercept = small.AOO),
+  ncol = 2,
+  top = textGrob(
+    "T. ornatus 1000 AOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador",
+    just = "center",
+    gp = gpar(
+      col = "blue",
+      fontsize = 15,
+      font = 3
+    )
+  )
+)
+```
+
