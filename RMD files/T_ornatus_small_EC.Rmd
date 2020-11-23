@@ -26,21 +26,34 @@ load("../data/T_ornatus/T_ornatus_Ec.rda")
 
 small_observed <-
   dplyr::select(T_ornatus_Ec,
-    decimalLatitude,
-    decimalLongitude,
-    species)
+                decimalLatitude,
+                decimalLongitude,
+                species)
+
+summary(small_observed$coordinateUncertaintyInMeters)
+
 
 data(land)
-small.IUCN <- IUCN.eval(small_observed, exclude.area = T, write_results = F)
+small.IUCN <-
+  IUCN.eval(
+    small_observed,
+    country_map = land,
+    exclude.area = T,
+    write_results = F,
+    DrawMap = TRUE,
+    file_name = "EC_results"
+  )
 small.EOO <- small.IUCN$EOO #456
-small.AOO <- small.IUCN$AOO #49849
+small.AOO <- small.IUCN$AOO #49848.9
 
 small_observed <-
-  dplyr::select(T_ornatus_Ec,
+  dplyr::select(
+    T_ornatus_Ec,
     decimalLatitude,
     decimalLongitude,
     coordinateUncertaintyInMeters,
-    species)
+    species
+  )
 ```
 
 # 2. meters_to_decdeg function
@@ -66,7 +79,7 @@ small_naZero <- dplyr::select(
   lat_uncertainty,
   species
 )
-  
+
 #NA as Mean
 small_naMean <-
   meters_to_decdeg(
@@ -105,7 +118,9 @@ small_naNA <-
 #removes the NA cells to use function random_geo_range with uses lat/lon uncertainty
 small_naNA <-
   dplyr::filter(small_naNA, !is.na(coordinateUncertaintyInMeters))
-small_naNA <- dplyr::select(small_naNA,
+
+small_naNA <- dplyr::select(
+  small_naNA,
   decimalLatitude,
   decimalLongitude,
   lon_uncertainty,
@@ -119,7 +134,7 @@ small_naNA <- dplyr::select(small_naNA,
 ## `NA as Mean`
 ```{r small_naMean_geo_range}
 #1000
-#---- 
+#----
 small_naMean_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -128,18 +143,11 @@ small_naMean_geo_range_1000 <-
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
-    lat_uncertainty = "lat_uncertainty"
+    lat_uncertainty = "lat_uncertainty",
+    country_map = land,
+    exclude.area = T
   )
-names(small_naMean_geo_range_1000)[1] <- "naMean_EOO"
-names(small_naMean_geo_range_1000)[2] <- "naMean_AOO"
-
-#Z-stat
-## EOO --> -4.329659
-(small.EOO - mean(small_naMean_geo_range_1000$naMean_EOO)) / sd(small_naMean_geo_range_1000$naMean_EOO)
-
-## AOO --> -7.745828
-(small.AOO - mean(small_naMean_geo_range_1000$naMean_AOO)) / sd(small_naMean_geo_range_1000$naMean_AOO)
-
+small_naMean_geo_range_1000$NA_action <- "NA as Mean"
 #----
 #100
 small_naMean_geo_range_100 <-
@@ -150,17 +158,24 @@ small_naMean_geo_range_100 <-
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
-    lat_uncertainty = "lat_uncertainty"
+    lat_uncertainty = "lat_uncertainty",
+    country_map = land,
+    exclude.area = T
   )
-names(small_naMean_geo_range_100)[1] <- "naMean_EOO"
-names(small_naMean_geo_range_100)[2] <- "naMean_AOO"
+small_naMean_geo_range_100$NA_action <- "NA as Mean"
 
 #Z-stat
-## EOO --> -4.069339
-(small.EOO - mean(small_naMean_geo_range_100$naMean_EOO)) / sd(small_naMean_geo_range_100$naMean_EOO)
+#100.EOO --> -4.783784
+(small.EOO - mean(small_naMean_geo_range_100$EOO)) / sd(small_naMean_geo_range_100$EOO)
 
-## AOO --> -8.325899
-(small.AOO - mean(small_naMean_geo_range_100$naMean_AOO)) / sd(small_naMean_geo_range_100$naMean_AOO)
+#100.AOO --> -7.764154 
+(small.AOO - mean(small_naMean_geo_range_100$AOO)) / sd(small_naMean_geo_range_100$AOO)
+
+#EOO.1K --> -4.329659
+(small.EOO - mean(small_naMean_geo_range_1000$EOO)) / sd(small_naMean_geo_range_1000$EOO)
+
+#AOO.1K --> -7.745828
+(small.AOO - mean(small_naMean_geo_range_1000$AOO)) / sd(small_naMean_geo_range_1000$AOO)
 ```
 
 ## `Na as Zero`
@@ -175,22 +190,14 @@ small_naZero_geo_range_1000 <-
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
-    lat_uncertainty = "lat_uncertainty"
+    lat_uncertainty = "lat_uncertainty",
+    country_map = land,
+    exclude.area = T
   )
-names(small_naZero_geo_range_1000)[1] <- "naZero_EOO"
-names(small_naZero_geo_range_1000)[2] <- "naZero_AOO"
+small_naZero_geo_range_1000$NA_action <- "NA as Zero"
 
-#Z-stat
-## EOO --> -6.283048
-(small.EOO - mean(small_naZero_geo_range_1000$naZero_EOO)) / sd(small_naZero_geo_range_1000$naZero_EOO)
-
-#Z-stat
-## AOO --> -7.914024
-(small.AOO - mean(small_naZero_geo_range_1000$naZero_AOO)) / sd(small_naZero_geo_range_1000$naZero_AOO)
-save(small_naZero_geo_range_1000, file = "../Results/small_naZero_geo_range_1000.rda")
-#----
 #100
-#---- 
+#----
 small_naZero_geo_range_100 <-
   random_geo_range(
     100,
@@ -199,23 +206,31 @@ small_naZero_geo_range_100 <-
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
-    lat_uncertainty = "lat_uncertainty"
+    lat_uncertainty = "lat_uncertainty",
+    country_map = land,
+    exclude.area = T
   )
-names(small_naZero_geo_range_100)[1] <- "naZero_EOO"
-names(small_naZero_geo_range_100)[2] <- "naZero_AOO"
+small_naZero_geo_range_100$NA_action <- "NA as Zero"
 
 #Z-stat
-## EOO  --> -6.523924
-(small.EOO - mean(small_naZero_geo_range_100$naZero_EOO)) / sd(small_naZero_geo_range_100$naZero_EOO)
+## 100.EOO  --> -6.523951
+(small.EOO - mean(small_naZero_geo_range_100$EOO)) / sd(small_naZero_geo_range_100$EOO)
 
-## AOO --> -6.965812
-(small.AOO - mean(small_naZero_geo_range_100$naZero_AOO)) / sd(small_naZero_geo_range_100$naZero_AOO)
+## 100.AOO --> -6.965812
+(small.AOO - mean(small_naZero_geo_range_100$nAOO)) / sd(small_naZero_geo_range_100$AOO)
+
+## EOO.1K --> -6.283048
+(small.EOO - mean(small_naZero_geo_range_1000$EOO)) / sd(small_naZero_geo_range_1000$EOO)
+
+## AOO.1K --> -7.914024
+(small.AOO - mean(small_naZero_geo_range_1000$AOO)) / sd(small_naZero_geo_range_1000$AOO)
+
 ```
 
 ## `NA as NA`
 ```{r small_naNA_geo_range}
 #1000
-#---- 
+#----
 small_naNA_geo_range_1000 <-
   random_geo_range(
     1000,
@@ -224,22 +239,14 @@ small_naNA_geo_range_1000 <-
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
-    lat_uncertainty = "lat_uncertainty"
+    lat_uncertainty = "lat_uncertainty",
+    country_map = land,
+    exclude.area = T
   )
-
-names(small_naNA_geo_range_1000)[1] <- "naNA_EOO"
-names(small_naNA_geo_range_1000)[2] <- "naNA_AOO"
-
-#Z-stat
-## EOO --> -3.585046
-(small.EOO - mean(small_naNA_geo_range_1000$naNA_EOO)) / sd(small_naNA_geo_range_1000$naNA_EOO)
-
-## AOO --> -6.130783
-(small.AOO - mean(small_naNA_geo_range_1000$naNA_AOO)) / sd(small_naNA_geo_range_1000$naNA_AOO)
+small_naNA_geo_range_1000$NA_action <- "NA as NA"
 
 #----
-#100  
-#---- 
+#100
 small_naNA_geo_range_100 <-
   random_geo_range(
     100,
@@ -248,142 +255,147 @@ small_naNA_geo_range_100 <-
     lat_col = "decimalLatitude",
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
-    lat_uncertainty = "lat_uncertainty"
+    lat_uncertainty = "lat_uncertainty",
+    country_map = land,
+    exclude.area = T
   )
-
-names(small_naNA_geo_range_100)[1] <- "naNA_EOO"
-names(small_naNA_geo_range_100)[2] <- "naNA_AOO"
+small_naNA_geo_range_100$NA_action <- "NA as NA"
 
 #Z-stat
-## EOO --> -3.669355
-(small.EOO - mean(small_naNA_geo_range_100$naNA_EOO)) / sd(small_naNA_geo_range_100$naNA_EOO)
+## 100.EOO --> -3.543685
+(small.EOO - mean(small_naNA_geo_range_100$EOO)) / sd(small_naNA_geo_range_100$EOO)
 
-## AOO --> -5.382673
-(small.AOO - mean(small_naNA_geo_range_100$naNA_AOO)) / sd(small_naNA_geo_range_100$naNA_AOO)
+## 100.AOO --> -5.409427
+(small.AOO - mean(small_naNA_geo_range_100$AOO)) / sd(small_naNA_geo_range_100$AOO)
+
+## EOO.1K --> -3.585068
+(small.EOO - mean(small_naNA_geo_range_1000$EOO)) / sd(small_naNA_geo_range_1000$EOO)
+
+## AOO.1K --> -6.130783
+(small.AOO - mean(small_naNA_geo_range_1000$AOO)) / sd(small_naNA_geo_range_1000$AOO)
 ```
 
 # Save Results as CSV
 ```{r csv iterations}
-small_100georanges <-
-  cbind(
-    small_naMean_geo_range_100,
-    small_naZero_geo_range_100,
-    small_naNA_geo_range_100
-  )
-save(small_100georanges, file = "../Results/Ec_100georanges.rda")
+save(
+  small_naMean_geo_range_100,
+  small_naZero_geo_range_100,
+  small_naNA_geo_range_100,
+  file = "../Results/Ec_results/Ec_100georanges.rda"
+)
 
-small_1000georanges <-
-  cbind(
-    small_naMean_geo_range_1000,
-    small_naZero_geo_range_1000,
-    small_naNA_geo_range_1000
-  )
-save(small_1000georanges, file = "../Results/Ec_1000georanges.rda")
+save(
+  small_naMean_geo_range_1000,
+  small_naZero_geo_range_1000,
+  small_naNA_geo_range_1000,
+  file = "../Results/Ec_results/Ec_1000georanges.rda"
+)
 
 ```
 
-```{r 100 iteration plots echo=FALSE, fig.width = 10, fig.height= 10}
+```{r EOO iteration plots echo=FALSE, fig.width = 10, fig.height= 15}
 library(ggplot2)
 library(gridExtra)
 library(grid)
 library(ggrepel)
 
 theme_set(theme_gray())
+theme(plot.title = element_text(hjust = 0.5))
 
 load("../Results/Ec_100georanges.rda")
-EOO_small_100georanges <- dplyr::select(small_100georanges, matches("EOO"))
-
-AOO_small_100georanges <- dplyr::select(small_100georanges, matches("AOO"))
-
-
-grid.arrange(
-  ggplot(data = EOO_small_100georanges, aes(naMean_EOO)) + geom_histogram() +
-    geom_vline(xintercept = small.EOO),
-  ggplot(data = EOO_small_100georanges, aes(naZero_EOO)) + geom_histogram() +
-    geom_vline(xintercept = small.EOO),
-  ggplot(data = EOO_small_100georanges, aes(naNA_EOO)) + geom_histogram() +
-    geom_vline(xintercept = small.EOO),
-  ncol = 2,
-  top = textGrob(
-    "T. ornatus 100 EOO iterations using generated occurrences with degrees uncertainty and different NA_action parameters in Ecuador",
-    just = "center",
-    gp = gpar(
-      col = "blue",
-      fontsize = 15,
-      font = 3
-    )
-  )
-)
-
-grid.arrange(
-  ggplot(data = AOO_small_100georanges, aes(naMean_AOO)) + geom_histogram() +
-    geom_vline(xintercept = small.AOO),
-  ggplot(data = AOO_small_100georanges, aes(naZero_AOO)) + geom_histogram() +
-    geom_vline(xintercept = small.AOO),
-  ggplot(data = AOO_small_100georanges, aes(naNA_AOO)) + geom_histogram() +
-    geom_vline(xintercept = small.AOO),
-  ncol = 2,
-  top = textGrob(
-    "T. ornatus 100 EOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador",
-    just = "center",
-    gp = gpar(
-      col = "blue",
-      fontsize = 15,
-      font = 3
-    )
-  )
-)
-```
-```{r 1000 iteration plots echo=FALSE, fig.width = 10, fig.height= 10}
-library(ggplot2)
-library(gridExtra)
-library(grid)
-library(ggrepel)
-
-theme_set(theme_gray())
 
 load("../Results/Ec_1000georanges.rda")
-EOO_small_1000georanges <- dplyr::select(small_1000georanges, matches("EOO"))
 
-AOO_small_1000georanges <- dplyr::select(small_1000georanges, matches("AOO"))
-
-
-grid.arrange(
-  ggplot(data = EOO_small_1000georanges, aes(naMean_EOO)) + geom_histogram() +
-    geom_vline(xintercept = small.EOO),
-  ggplot(data = EOO_small_1000georanges, aes(naZero_EOO)) + geom_histogram() +
-    geom_vline(xintercept = small.EOO),
-  ggplot(data = EOO_small_1000georanges, aes(naNA_EOO)) + geom_histogram() +
-    geom_vline(xintercept = small.EOO),
-  ncol = 2,
-  top = textGrob(
-    "T. ornatus 1000 EOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador",
-    just = "center",
-    gp = gpar(
-      col = "blue",
-      fontsize = 15,
-      font = 3
-    )
-  )
+EC_1000georanges <- rbind(naMean_geo_range_1000,
+                          naZero_geo_range_1000,
+                          naNA_geo_range_1000
 )
 
-grid.arrange(
-  ggplot(data = AOO_small_1000georanges, aes(naMean_AOO)) + geom_histogram() +
-    geom_vline(xintercept = small.AOO),
-  ggplot(data = AOO_small_1000georanges, aes(naZero_AOO)) + geom_histogram() +
-    geom_vline(xintercept = small.AOO),
-  ggplot(data = AOO_small_1000georanges, aes(naNA_AOO)) + geom_histogram() +
-    geom_vline(xintercept = small.AOO),
-  ncol = 2,
-  top = textGrob(
-    "T. ornatus 1000 AOO iterations using generated occurrences \n with degrees uncertainty and different NA_action parameters in Ecuador",
-    just = "center",
-    gp = gpar(
-      col = "blue",
-      fontsize = 15,
-      font = 3
-    )
-  )
+EC_100georanges <- rbind(naMean_geo_range_100,
+                         naZero_geo_range_100,
+                         naNA_geo_range_100
+)
+
+EOO.1000 <-
+  ggplot(EC_1000georanges, aes(x = EOO, fill = as.factor(NA_action)))  +
+  theme_bw() +
+  scale_fill_discrete(name = "NA Parameters", guide = FALSE) +
+  geom_histogram(alpha = 0.6,
+                 position = 'identity') +
+  geom_vline(aes(xintercept = 248174.8),
+             #Only NA occ EOO
+             colour = "black",
+             linetype = 2) +
+  geom_vline(xintercept = large.EOO, colour = "red") #observed EOO
+
+AOO.1000 <-
+  ggplot(EC_100georanges, aes(x = AOO, color = as.factor(NA_action)))  +
+  theme_bw() +
+  
+  scale_color_discrete(name = "NA Parameters") +
+  geom_histogram(alpha = 0.6,
+                 position = 'identity') +
+  geom_vline(aes(xintercept = 744),
+             colour = "black",
+             linetype = 2,) +
+  geom_vline(xintercept = large.AOO, colour = "red")
+
+EOO.100 <-
+  ggplot(EC_100georanges, aes(x = EOO, fill = as.factor(NA_action)))  +
+  theme_bw() +
+  scale_fill_discrete(name = "NA Parameters", guide = FALSE) +
+  geom_histogram(alpha = 0.6,
+                 position = 'identity') +
+  geom_vline(aes(xintercept = 248174.8),
+             #Only NA occ EOO
+             colour = "black",
+             linetype = 2) +
+  geom_vline(xintercept = large.EOO, colour = "red") #observed EOO
+
+AOO.100 <-
+  ggplot(EC_100georanges, aes(x = AOO, color = as.factor(NA_action)))  +
+  theme_bw() +
+  
+  scale_color_discrete(name = "NA Parameters") +
+  geom_histogram(alpha = 0.6,
+                 position = 'identity') +
+  geom_vline(aes(xintercept = 744),
+             colour = "black",
+             linetype = 2,) +
+  geom_vline(xintercept = large.AOO, colour = "red")
+
+EC_plot <-
+  plot_grid(EOO.1000,
+            AOO.1000,
+            EOO.100,
+            AOO.100,
+            ncol = 2,
+            rel_widths = c(1, 1.6))
+
+title <- ggdraw() +
+  draw_label(
+    "T. ornatus added uncertainty occurrences' spatial metric with different NA_action parameters in Ecuador",
+    fontface = 'bold',
+    x = 0,
+    hjust = 0
+  ) +
+  theme(# add margin on the left of the drawing canvas,
+    # so title is aligned with left edge of first plot
+    plot.margin = margin(0, 0, 0, 7))
+
+plot_grid(title,
+          EC_plot,
+          ncol = 1,
+          # rel_heights values control vertical title margins
+          rel_heights = c(0.1, 1))
+
+cowplot::ggsave(
+  filename = "Ec_results/EC_plot_grid.png",
+  width = 8,
+  height = 4,
+  units = "in",
+  dpi = 96
 )
 ```
+
 
