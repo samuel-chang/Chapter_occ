@@ -32,8 +32,8 @@ full <-
 
 data(land)
 full.IUCN <- IUCN.eval(full, exclude.area = T, write_results = F, DrawMap = TRUE, file_name="full_results")
-full.EOO <- full.IUCN$EOO #-->385341.9
-full.AOO <- full.IUCN$AOO #-->1248
+full.EOO <- 385341.9 #full.IUCN$EOO #-->
+full.AOO <- 1248 #--> full.IUCN$AOO 
 
 full <-
   dplyr::select(Tremarctos_ornatus,
@@ -119,7 +119,6 @@ full_naNA <- dplyr::select(
 ```
 
 # 3. Using the random occurrences in land metrics with random_geo_range
-
 ## `NA as Mean`
 ```{r naMean_geo_range}
 #1000 
@@ -149,25 +148,22 @@ naMean_geo_range_100 <-
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty",
-    country_map = land,
     exclude.area = T
   )
 naMean_geo_range_100$NA_action <- "NA as Mean"
 
 #Z-stat
-#100.EOO <- #-2.626726
+#100.EOO <- -2.765256
 (full.EOO - mean(naMean_geo_range_100$EOO)) / sd(naMean_geo_range_100$EOO)
 
-#100.AOO  <- #-101.5001
+#100.AOO  <- -100.4125
 (full.AOO - mean(naMean_geo_range_100$AOO)) / sd(naMean_geo_range_100$AOO)
 
-#EOO.1k <- ##-2.103957
+#EOO.1k <- -2.603563
 (full.EOO - mean(naMean_geo_range_1000$EOO)) / sd(naMean_geo_range_1000$EOO)
 
-#AOO.1K <-  ##-90.41973
+#AOO.1K <-  -89.80614
 (full.AOO - mean(naMean_geo_range_1000$AOO)) / sd(naMean_geo_range_1000$AOO)
-
-#The test scores of the two spatial metric from the observed data is consisted with the different parameters used, indicating the influence of N number of observation with high uncertainty.  
 ```
 
 ## `Na as Zero`
@@ -183,7 +179,6 @@ naZero_geo_range_1000 <-
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty",
-    contry_map = land,
     exclude.area = T
   )
 naZero_geo_range_1000$NA_action <- "NA as Zero"
@@ -199,22 +194,21 @@ naZero_geo_range_100 <-
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty",
-    contry_map = land,
     exclude.area = T
   )
 naZero_geo_range_100$NA_action <- "NA as Zero"
 
 #Z-stat
-## EOO.100 --> -1.615587
+## EOO.100 --> -1.586518
 (full.EOO - mean(naZero_geo_range_100$EOO)) / sd(naZero_geo_range_100$EOO)
 
-## AOO.100  --> -6.593672
+## AOO.100  --> -5.665667
 (full.AOO - mean(naZero_geo_range_100$AOO)) / sd(naZero_geo_range_100$AOO)
 
-## EOO.1K --> -1.675276
+## EOO.1K --> -1.627137
 (full.EOO - mean(naZero_geo_range_1000$EOO)) / sd(naZero_geo_range_1000$EOO)
 
-## AOO.1K --> -5.851768
+## AOO.1K --> -5.726807
 (full.AOO - mean(naZero_geo_range_1000$AOO)) / sd(naZero_geo_range_1000$AOO)
 
 ```
@@ -232,7 +226,6 @@ naNA_geo_range_1000 <-
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty",
-    contry_map = land,
     exclude.area = T
   )
 naNA_geo_range_1000$NA_action <- "NA as NA"
@@ -248,22 +241,21 @@ naNA_geo_range_100 <-
     lon_col = "decimalLongitude",
     lon_uncertainty = "lon_uncertainty",
     lat_uncertainty = "lat_uncertainty",
-    contry_map = land,
     exclude.area = T
   )
 naNA_geo_range_100$NA_action <- "NA as NA"
 
 #Z-stat
-## 100.EOO --> 0.9599171
+## 100.EOO --> 1.114009
 (full.EOO - mean(naNA_geo_range_100$EOO)) / sd(naNA_geo_range_100$EOO)
 
-## 100.AOO --> 161.3193
+## 100.AOO --> 165.9692
 (full.AOO - mean(naNA_geo_range_100$AOO)) / sd(naNA_geo_range_100$AOO)
  
-## EOO.1K --> 0.9819217
+## EOO.1K --> 1.025156
 (full.EOO - mean(naNA_geo_range_1000$EOO)) / sd(naNA_geo_range_1000$EOO)
 
-## AOO.1K--> 145.5964
+## AOO.1K--> 145.8793
 (full.AOO - mean(naNA_geo_range_1000$AOO)) / sd(naNA_geo_range_1000$AOO)
 ```
 
@@ -278,12 +270,12 @@ save(naMean_geo_range_1000,
     naNA_geo_range_1000, file = "../Results/full_results/full_1000.rda")
 ```
 
-```{r 100 iterations echo=FALSE, fig.width = 10, fig.height= 10}
+#Plots in a grid
+```{r }
 library(ggplot2)
-library(gridExtra)
-library(grid)
-library(ggrepel)
 library(cowplot)
+library(scales)
+library(gtable)
 
 theme_set(theme_gray())
 
@@ -300,60 +292,142 @@ full_100georanges <- rbind(naMean_geo_range_100,
 
 EOO.1000 <-
   ggplot(full_1000georanges, aes(x = EOO, fill = as.factor(NA_action)))  +
-  theme_bw() +
-  scale_fill_discrete(name = "NA Parameters", guide = FALSE) +
+  scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
-                 position = 'identity') +
-  geom_vline(xintercept = full.EOO, colour = "red") #observed EOO
+                 position = 'identity',
+                 bins = 20) +
+  scale_x_continuous(labels = comma ,
+                     limits = c(283607.4, 563895.1)) +
+  ylab("1000 iterations") +
+  theme(
+    plot.margin = margin(l = 0.5, unit = "cm"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(
+      hjust = 0.5,
+      vjust = 7,
+      face = "bold"
+    )
+  )
 
 AOO.1000 <-
-  ggplot(full_1000georanges, aes(x = AOO, color = as.factor(NA_action)))  +
-  theme_bw() +
-  scale_color_discrete(name = "NA Parameters", guide = FALSE) +
+  ggplot(full_1000georanges, aes(x = AOO, fill = as.factor(NA_action)))  +
+  scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
-                 position = 'identity') +
-  geom_vline(xintercept = full.AOO, colour = "red")
+                 position = 'identity',
+                 bins = 20) +
+  scale_x_continuous(labels = comma) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    plot.margin = margin(l = 0.7, unit = "cm")
+  )
 
 EOO.100 <-
   ggplot(full_100georanges, aes(x = EOO, fill = as.factor(NA_action)))  +
-  theme_bw() +
-  scale_fill_discrete(name = "NA Parameters", guide = FALSE) +
+  scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
-                 position = 'identity') +
-  geom_vline(xintercept = full.EOO, colour = "red") #observed EOO
+                 position = 'identity',
+                 bins = 20) +
+  scale_x_continuous(labels = comma,
+                     limits = c(283607.4, 563895.1)) +
+  ylab("100 iterations") +
+  theme(
+    plot.margin = margin(l = 0.5, unit = "cm"),
+    axis.title.y = element_text(
+      hjust = 0.5,
+      vjust = 7,
+      face = "bold"
+    ),
+    axis.title.x = element_text(face = "bold")
+  )
 
 AOO.100 <-
   ggplot(full_100georanges, aes(x = AOO, fill = as.factor(NA_action)))  +
-  theme_bw() +
   scale_fill_discrete(name = "NA Parameters") +
   geom_histogram(alpha = 0.6,
-                 position = 'identity') +
-  geom_vline(xintercept = full.AOO, colour = "red")
-
+                 position = 'identity',
+                 bins = 20) +
+  scale_x_continuous(labels = comma) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none",
+    plot.margin = margin(l = 0.71, unit = "cm"),
+    axis.title.x = element_text(face = "bold")
+  )
 
 full_plot <-
   plot_grid(
-    EOO.100,
-    AOO.100,
     EOO.1000,
     AOO.1000,
+    EOO.100,
+    AOO.100,
     ncol = 2,
-    rel_widths = c(1, 1.6),
-    aling = 'vh',
-    labels = c("A", "B", "C", "D")
-  )
+    rel_widths = c(1, 1),
+    rel_hights = c(1, 1),
+    aling = 'hv',
+    axis = "rlbt",
+    labels = c("A", "B", "C", "D"),
+    label_size = 8, 
+    hjust = -2
+    )
+```
+#Place the legend at the bottom.
+```{r }
+# extract a legend that is laid out horizontally
+legend_b <- get_legend(
+  AOO.100 + 
+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom")
+)
 
-legend <- get_legend(# create some space to the left of the legend
-  full_plot + theme(legend.box.margin = margin(0, 0, 12)))
+grid.arrange(full_plot, legend_b, ncol = 1)
+#add space arpund edges
+theme(plot.margin = unit(c(1,0.5,0.5,0.5), "cm")) 
 
-cowplot::ggsave(
-  filename = "Results/full_results/full_plot_grid.png",
-  width = 8,
-  height = 4,
+# Suppress tick marks
+p=full_plot+scale_y_continuous(breaks=NULL)+scale_x_continuous(breaks=NULL)
+
+# Have to turn off clipping
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name == "panel"] <- "off"
+
+# need to draw it with the new clip settings
+grid.draw(gt)
+
+
+# add the legend underneath the row we made earlier. Give it 10%
+# of the height of one plot (via rel_heights).
+plot_grid(full_plot, legend_b, ncol = 1, rel_heights = c(620,.01))
+```
+
+#Save plot
+```{r}
+plot_legend <-
+  ggplot(full_100georanges, aes(x = AOO, fill = as.factor(NA_action)))  +
+  scale_fill_discrete(name = "NA Parameters")+
+  geom_histogram(alpha = 0.6,
+                 position = 'identity',
+                 bins = 20)+
+  theme(legend.position = "bottom")
+
+
+legend = get_legend(plot_legend)
+  
+  gtable_filter(ggplot_gtable(
+  ggplot_build(plot_legend)), "guide-box")
+
+full <-
+  plot_grid(full_plot, legend, ncol  = 1)
+
+
+# [ggsave2] 
+save_plot(
+  plot= full_plot,
+  filename = "full_plot_grid.png",
+  base_width = 8,
+  base_height = 5,
   units = "in",
   dpi = 96
 )
-
-  
 ```
 
