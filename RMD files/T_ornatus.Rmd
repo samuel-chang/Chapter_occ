@@ -271,13 +271,13 @@ save(naMean_geo_range_1000,
 ```
 
 #Plots in a grid
-```{r }
+```{r } 
 library(ggplot2)
 library(cowplot)
 library(scales)
 library(gtable)
 
-theme_set(theme_gray())
+theme_set(theme_grey())
 
 load("../Results/full_results/full_1000.rda")
 load("../Results/full_results/full_100.rda")
@@ -295,7 +295,7 @@ EOO.1000 <-
   scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
                  position = 'identity',
-                 bins = 20) +
+                 bins = 50) +
   scale_x_continuous(labels = comma ,
                      limits = c(283607.4, 563895.1)) +
   ylab("1000 iterations") +
@@ -314,7 +314,7 @@ AOO.1000 <-
   scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
                  position = 'identity',
-                 bins = 20) +
+                 bins = 50) +
   scale_x_continuous(labels = comma) +
   theme(
     axis.title.x = element_blank(),
@@ -327,10 +327,11 @@ EOO.100 <-
   scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
                  position = 'identity',
-                 bins = 20) +
+                 bins = 50) +
   scale_x_continuous(labels = comma,
                      limits = c(283607.4, 563895.1)) +
   ylab("100 iterations") +
+  
   theme(
     plot.margin = margin(l = 0.5, unit = "cm"),
     axis.title.y = element_text(
@@ -346,7 +347,7 @@ AOO.100 <-
   scale_fill_discrete(name = "NA Parameters") +
   geom_histogram(alpha = 0.6,
                  position = 'identity',
-                 bins = 20) +
+                 bins = 50) +
   scale_x_continuous(labels = comma) +
   theme(
     axis.title.y = element_blank(),
@@ -367,12 +368,21 @@ full_plot <-
     aling = 'hv',
     axis = "rlbt",
     labels = c("A", "B", "C", "D"),
-    label_size = 8, 
+    label_size = 8,
     hjust = -2
-    )
+  )
+
+cowplot::ggsave2(
+  filename = "plot_grid.png",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 96
+)
 ```
 #Place the legend at the bottom.
 ```{r }
+library(gridExtra)
 # extract a legend that is laid out horizontally
 legend_b <- get_legend(
   AOO.100 + 
@@ -397,7 +407,7 @@ grid.draw(gt)
 
 # add the legend underneath the row we made earlier. Give it 10%
 # of the height of one plot (via rel_heights).
-plot_grid(full_plot, legend_b, ncol = 1, rel_heights = c(620,.01))
+plot_grid(legend_b, ncol = 1)
 ```
 
 #Save plot

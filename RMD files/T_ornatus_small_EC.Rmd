@@ -287,7 +287,7 @@ save(
 
 ```
 
-```{r EOO iteration plots echo=FALSE, fig.width = 10, fig.height= 15}
+```{r EOO iteration plots}
 library(ggplot2)
 library(cowplot)
 library(scales)
@@ -320,7 +320,7 @@ EOO.1000 <-
                  bins = 20) +
   scale_x_continuous(labels = comma ,
                      limits = c(51657.5, 95551.7)) +
-  scale_y_continuous(limits = c(0, 300))+
+  ylim(0,250)+
   ylab("1000 iterations") +
   theme(
     plot.margin = margin(l = 0.5, unit = "cm"),
@@ -353,7 +353,7 @@ EOO.100 <-
                  bins = 20) +
   scale_x_continuous(labels = comma,
                      limits = c(51657.5, 95551.7))  +
-  scale_y_continuous(limits = c(0,45))+
+  ylim(0,30)+
   ylab("100 iterations") +
   theme(
     plot.margin = margin(l = 0.5, unit = "cm"),
@@ -395,6 +395,14 @@ full_plot <-
     label_size = 8, 
     hjust = -2
     )
+
+cowplot::ggsave2(
+  filename = "EC_plot_grid.png",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 96
+)
 ```
 
 #Place the legend at the bottom.

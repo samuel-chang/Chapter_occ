@@ -272,10 +272,7 @@ save(naMean_geo_range_1000,
 
 ```
 
-```{r EOO iteration plots echo=FALSE, fig.width = 10, fig.height= 15}
-library(ggplot2)
-library(cowplot)
-
+```{r EOO iteration }
 load("../Results/Co_results/Co_100georanges.rda")
 load("../Results/Co_results/Co_1000georanges.rda")
 
@@ -293,6 +290,10 @@ CO_100georanges <- rbind(
 ```
 
 ```{r}
+library(ggplot2)
+library(cowplot)
+library(scales)
+
 EOO.1000 <-
   ggplot(CO_1000georanges, aes(x = EOO, fill = as.factor(NA_action)))  +
   scale_fill_discrete(guide = FALSE) +
@@ -317,8 +318,7 @@ AOO.1000 <-
   ggplot(CO_1000georanges, aes(x = AOO, fill = as.factor(NA_action)))  +
   scale_fill_discrete(guide = FALSE) +
   geom_histogram(alpha = 0.6,
-                 position = 'identity',
-                 bins = 20) +
+                 position = 'identity') +
  scale_x_continuous(limits = c(0,4068),labels = comma)  +
   #scale_y_continuous(limits = c(0, 300))+  
   theme(
@@ -351,8 +351,7 @@ AOO.100 <-
   ggplot(CO_100georanges, aes(x = AOO, fill = as.factor(NA_action)))  +
   scale_fill_discrete(name = "NA Parameters") +
   geom_histogram(alpha = 0.6,
-                 position = 'identity',
-                 bins = 20) +
+                 position = 'identity') +
   scale_x_continuous(limits = c(0,4068),labels = comma)  +
   #scale_y_continuous(limits = c(0,45))+
   theme(
@@ -377,26 +376,12 @@ full_plot <-
     label_size = 8, 
     hjust = -2
     )
-```
 
-#Place the legend at the bottom.
-```{r }
-# extract a legend that is laid out horizontally
-legend_b <- get_legend(
-  AOO.100 + 
-    guides(color = guide_legend(nrow = 1)) +
-    theme(legend.position = "bottom")
-)
-# add the legend underneath the row we made earlier. Give it 10%
-# of the height of one plot (via rel_heights).
-plot_grid(full_plot, legend_b, ncol = 1, rel_heights = c(620,.01))
-
-cowplot::ggsave(
-  filename = "Results/Co_results/full_plot_grid.png",
+cowplot::ggsave2(
+  filename = "CO_plot_grid.png",
   width = 8,
-  height = 4,
+  height = 6,
   units = "in",
   dpi = 96
 )
 ```
-
